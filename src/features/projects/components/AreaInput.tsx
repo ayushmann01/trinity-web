@@ -29,7 +29,7 @@ export function AreaInput({ id, unitId, valueName, unitName, register, error }: 
       <Select
         id={unitId}
         aria-label={`${id} unit`}
-        className="h-9 w-[5.75rem] shrink-0 px-2 shadow-none"
+        className="wizard-select h-9 w-[5.75rem] shrink-0 px-2 shadow-none"
         {...register(unitName)}
       >
         {AREA_UNITS.map((unit) => (

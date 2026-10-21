@@ -86,7 +86,7 @@ export function ProjectProfileForm({ form }: ProjectProfileFormProps) {
           <FormField htmlFor="climateZone" label="Climate zone" error={errors.climateZone?.message}>
             <Select
               id="climateZone"
-              className="h-9 shadow-none"
+              className="wizard-select h-9 shadow-none"
               {...register('climateZone')}
             >
               <option value="">Select climate zone</option>
@@ -105,7 +105,7 @@ export function ProjectProfileForm({ form }: ProjectProfileFormProps) {
           >
             <Select
               id="typologyId"
-              className={inputClass(Boolean(errors.typologyId))}
+              className={cn('wizard-select', inputClass(Boolean(errors.typologyId)))}
               {...register('typologyId')}
             >
               <option value="">Select typology</option>

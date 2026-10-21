@@ -10,7 +10,7 @@ export function WizardStepper({ currentStep, onStepChange }: WizardStepperProps)
   return (
     <nav aria-label="Project set-up" className="px-3 py-5" data-testid="wizard-stepper">
       <p className="mb-3 px-2 text-[11px] font-medium text-neutral-400">Project set-up</p>
-      <ol className="space-y-0.5">
+      <ol className="space-y-1">
         {PROJECT_SETUP_STEPS.map((step) => {
           const active = step.id === currentStep
           return (

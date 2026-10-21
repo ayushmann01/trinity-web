@@ -10,7 +10,7 @@ import {
   persistReducer,
   persistStore,
 } from 'redux-persist'
-import storage from 'redux-persist/lib/storage'
+import { persistStorage } from '@/shared/lib/persistStorage'
 import { baseApi } from '@/shared/api/baseApi'
 import { authSlice } from '@/features/auth/state/authSlice'
 import { projectDraftSlice } from '@/features/projects/state/projectDraftSlice'
@@ -23,7 +23,7 @@ const rootReducer = combineReducers({
 
 export const persistConfig = {
   key: 'root',
-  storage,
+  storage: persistStorage,
   whitelist: ['auth', 'projectDraft'],
 }
 
