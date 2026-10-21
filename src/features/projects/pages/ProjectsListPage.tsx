@@ -16,7 +16,7 @@ export function ProjectsListPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Projects</h1>
-        <Link to="/app/projects/new" className={buttonVariants({})}>
+        <Link to="/projects/new" className={buttonVariants({})}>
           New Project
         </Link>
       </div>

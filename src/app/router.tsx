@@ -7,6 +7,7 @@ import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage'
 import { ProjectsListPage } from '@/features/projects/pages/ProjectsListPage'
 import { ProjectFormPage } from '@/features/projects/pages/ProjectFormPage'
 import { ProjectDetailPage } from '@/features/projects/pages/ProjectDetailPage'
+import { NewProjectPage } from '@/features/projects/pages/NewProjectPage'
 import { ScorecardPage } from '@/features/scorecard/pages/ScorecardPage'
 
 export const router = createBrowserRouter([
@@ -23,6 +24,11 @@ export const router = createBrowserRouter([
     ],
   },
   {
+    path: '/projects/new',
+    element: <ProtectedRoute />,
+    children: [{ index: true, element: <NewProjectPage /> }],
+  },
+  {
     path: '/app',
     element: <ProtectedRoute />,
     children: [
@@ -30,7 +36,7 @@ export const router = createBrowserRouter([
         element: <AppLayout />,
         children: [
           { path: 'projects', element: <ProjectsListPage /> },
-          { path: 'projects/new', element: <ProjectFormPage /> },
+          { path: 'projects/new', element: <Navigate to="/projects/new" replace /> },
           { path: 'projects/:projectId', element: <ProjectDetailPage /> },
           { path: 'projects/:projectId/edit', element: <ProjectFormPage /> },
           { path: 'projects/:projectId/scorecard', element: <ScorecardPage /> },

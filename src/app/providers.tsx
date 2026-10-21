@@ -9,7 +9,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         {children}
-        <Toaster position="top-right" richColors />
+        <Toaster position="bottom-right" richColors />
       </PersistGate>
     </Provider>
   )
