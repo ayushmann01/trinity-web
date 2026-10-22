@@ -6,6 +6,7 @@ import { setupStore, type AppStore, type RootState } from '@/app/store'
 import { NewProjectPage } from '@/features/projects/pages/NewProjectPage'
 import { emptyProjectProfile } from '@/features/projects/schemas/projectProfile'
 import { emptyProjectCertification } from '@/features/projects/schemas/projectCertification'
+import { emptyProjectTimeline } from '@/features/projects/schemas/projectTimeline'
 import { mapWizardDraftToApi } from '@/features/projects/lib/mapProjectDraft'
 
 export const authedState: Pick<RootState, 'auth'> = {
@@ -14,6 +15,14 @@ export const authedState: Pick<RootState, 'auth'> = {
     refreshToken: 'test-refresh',
     user: { id: 'u1', email: 'tester@example.com', name: 'Tester' },
   },
+}
+
+export const emptyDraftState = {
+  currentStep: 1,
+  profile: emptyProjectProfile,
+  certification: emptyProjectCertification,
+  timeline: emptyProjectTimeline,
+  project: mapWizardDraftToApi(emptyProjectProfile, emptyProjectCertification, emptyProjectTimeline),
 }
 
 export function renderWithStore(
@@ -48,13 +57,11 @@ export function renderNewProjectPage(
 ) {
   const store = setupStore({
     ...authedState,
-    projectDraft: {
-      currentStep: 1,
-      profile: emptyProjectProfile,
-      certification: emptyProjectCertification,
-      project: mapWizardDraftToApi(emptyProjectProfile, emptyProjectCertification),
-    },
     ...options.preloadedState,
+    projectDraft: {
+      ...emptyDraftState,
+      ...options.preloadedState?.projectDraft,
+    },
   })
 
   const view = render(

@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from '@/shared/hooks/redux'
 import { ProjectWizardShell } from '@/features/projects/components/ProjectWizardShell'
 import { ProjectProfileForm } from '@/features/projects/components/ProjectProfileForm'
 import { CertificationDetailsForm } from '@/features/projects/components/CertificationDetailsForm'
+import { ProjectTimelineForm } from '@/features/projects/components/ProjectTimelineForm'
 import { WizardPlaceholderStep } from '@/features/projects/components/WizardPlaceholderStep'
 import { PROJECT_SETUP_STEPS } from '@/features/projects/constants'
 import {
@@ -20,7 +21,19 @@ import {
   projectCertificationSchema,
   type ProjectCertificationFormValues,
 } from '@/features/projects/schemas/projectCertification'
+import {
+  cloneTimeline,
+  emptyProjectTimeline,
+  projectTimelineSchema,
+  type ProjectTimelineFormValues,
+} from '@/features/projects/schemas/projectTimeline'
 import { persistProjectDraft } from '@/features/projects/state/projectDraftSlice'
+
+function placeholderNextLabel(step: number) {
+  if (step === 3) return 'Next: Timeline'
+  if (step === 5) return 'Next: Stakeholders'
+  return 'Next'
+}
 
 export function NewProjectPage() {
   const dispatch = useAppDispatch()
@@ -29,6 +42,7 @@ export function NewProjectPage() {
   const currentStep = draft.currentStep
   const stepMeta = PROJECT_SETUP_STEPS.find((step) => step.id === currentStep) ?? PROJECT_SETUP_STEPS[0]
   const certificationDraft = draft.certification ?? emptyProjectCertification
+  const timelineDraft = draft.timeline ?? emptyProjectTimeline
 
   const profileForm = useForm<ProjectProfileFormValues>({
     resolver: zodResolver(projectProfileSchema),
@@ -42,11 +56,18 @@ export function NewProjectPage() {
     mode: 'onSubmit',
   })
 
+  const timelineForm = useForm<ProjectTimelineFormValues>({
+    resolver: zodResolver(projectTimelineSchema),
+    defaultValues: cloneTimeline({ ...emptyProjectTimeline, ...timelineDraft }),
+    mode: 'onSubmit',
+  })
+
   const persistDraft = (step = currentStep) => {
     dispatch(
       persistProjectDraft({
         profile: profileForm.getValues(),
         certification: certificationForm.getValues(),
+        timeline: cloneTimeline(timelineForm.getValues()),
         currentStep: step,
       }),
     )
@@ -57,7 +78,7 @@ export function NewProjectPage() {
     toast.success('Draft saved')
   }
 
-  const handleCancel = () => {
+  const handleExit = () => {
     navigate('/app/projects')
   }
 
@@ -66,6 +87,7 @@ export function NewProjectPage() {
       persistProjectDraft({
         profile: values,
         certification: certificationForm.getValues(),
+        timeline: timelineForm.getValues(),
         currentStep: 2,
       }),
     )
@@ -76,7 +98,19 @@ export function NewProjectPage() {
       persistProjectDraft({
         profile: profileForm.getValues(),
         certification: values,
+        timeline: timelineForm.getValues(),
         currentStep: 3,
+      }),
+    )
+  })
+
+  const handleTimelineNext = timelineForm.handleSubmit((values) => {
+    dispatch(
+      persistProjectDraft({
+        profile: profileForm.getValues(),
+        certification: certificationForm.getValues(),
+        timeline: values,
+        currentStep: 5,
       }),
     )
   })
@@ -86,7 +120,8 @@ export function NewProjectPage() {
       currentStep={currentStep}
       onStepChange={(step) => persistDraft(step)}
       onSaveDraft={handleSaveDraft}
-      onCancel={handleCancel}
+      onExit={handleExit}
+      contentClassName={currentStep === 4 ? 'max-w-[1100px]' : undefined}
     >
       {currentStep === 1 ? (
         <form onSubmit={handleProfileNext} noValidate>
@@ -116,8 +151,22 @@ export function NewProjectPage() {
           <p className="mb-5 mt-1 text-[13px] text-neutral-500">{stepMeta.subtitle}</p>
           <CertificationDetailsForm form={certificationForm} onBack={() => persistDraft(1)} />
         </form>
+      ) : currentStep === 4 ? (
+        <form onSubmit={handleTimelineNext} noValidate>
+          <p className="text-[12px] text-neutral-400">Step 4 of 6</p>
+          <h1 className="mt-1 text-[22px] font-semibold tracking-tight text-neutral-900">
+            {stepMeta.pageTitle}
+          </h1>
+          <p className="mb-5 mt-1 text-[13px] text-neutral-500">{stepMeta.subtitle}</p>
+          <ProjectTimelineForm form={timelineForm} onBack={() => persistDraft(3)} />
+        </form>
       ) : (
-        <WizardPlaceholderStep step={currentStep} onBack={() => persistDraft(Math.max(1, currentStep - 1))} />
+        <WizardPlaceholderStep
+          step={currentStep}
+          onBack={() => persistDraft(Math.max(1, currentStep - 1))}
+          onNext={currentStep < 6 ? () => persistDraft(Math.min(6, currentStep + 1)) : undefined}
+          nextLabel={placeholderNextLabel(currentStep)}
+        />
       )}
     </ProjectWizardShell>
   )

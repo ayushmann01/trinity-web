@@ -20,6 +20,16 @@ export type Certification = {
   ratings?: CatalogOption[]
 }
 
+export type ProjectOffWeek = {
+  startDate: string
+  endDate: string
+}
+
+export type ProjectMilestone = {
+  name: string
+  date: string
+}
+
 export type Project = {
   id: string
   name: string
@@ -41,6 +51,16 @@ export type Project = {
   certificationCategoryId?: string
   targetRating?: string
   certificationStage?: CertificationStage
+  startDate?: string
+  designPhaseStart?: string
+  designPhaseEnd?: string
+  constructionPhaseStart?: string
+  constructionPhaseEnd?: string
+  preCertificationDeadline?: string
+  certificationDeadline?: string
+  siteVisitDates?: string[]
+  offWeeks?: ProjectOffWeek[]
+  milestones?: ProjectMilestone[]
   createdAt?: string
   updatedAt?: string
 }
