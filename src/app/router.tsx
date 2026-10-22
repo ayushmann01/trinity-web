@@ -8,6 +8,7 @@ import { ProjectsListPage } from '@/features/projects/pages/ProjectsListPage'
 import { ProjectFormPage } from '@/features/projects/pages/ProjectFormPage'
 import { ProjectDetailPage } from '@/features/projects/pages/ProjectDetailPage'
 import { NewProjectPage } from '@/features/projects/pages/NewProjectPage'
+import { EligibilityPlaceholderPage } from '@/features/projects/pages/EligibilityPlaceholderPage'
 import { ScorecardPage } from '@/features/scorecard/pages/ScorecardPage'
 
 export const router = createBrowserRouter([
@@ -26,7 +27,10 @@ export const router = createBrowserRouter([
   {
     path: '/projects/new',
     element: <ProtectedRoute />,
-    children: [{ index: true, element: <NewProjectPage /> }],
+    children: [
+      { index: true, element: <NewProjectPage /> },
+      { path: 'eligibility', element: <EligibilityPlaceholderPage /> },
+    ],
   },
   {
     path: '/app',

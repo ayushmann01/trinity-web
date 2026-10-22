@@ -57,6 +57,10 @@ export const projectsApi = baseApi.injectEndpoints({
       query: () => ({ url: '/catalog/certifications' }),
       providesTags: ['Certifications'],
     }),
+    getCertification: build.query<Certification, string>({
+      query: (id) => ({ url: `/catalog/certifications/${id}` }),
+      providesTags: (_res, _err, id) => [{ type: 'Certifications', id }],
+    }),
   }),
 })
 
@@ -66,4 +70,5 @@ export const {
   useCreateProjectMutation,
   useUpdateProjectMutation,
   useListCertificationsQuery,
+  useGetCertificationQuery,
 } = projectsApi
