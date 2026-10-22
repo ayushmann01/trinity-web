@@ -33,8 +33,9 @@ export const PROJECT_SETUP_STEPS = [
   {
     id: 6,
     label: 'Stakeholders (optional)',
-    pageTitle: 'Project Stakeholders',
-    subtitle: 'People who will collaborate on this project.',
+    pageTitle: 'Stakeholder Information',
+    subtitle:
+      'Add the people working on this project and choose what each can access. You can skip this step and invite stakeholders later.',
   },
 ] as const
 

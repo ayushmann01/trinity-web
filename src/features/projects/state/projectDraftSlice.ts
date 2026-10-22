@@ -14,6 +14,11 @@ import {
   emptyProjectTimeline,
   type ProjectTimelineFormValues,
 } from '@/features/projects/schemas/projectTimeline'
+import {
+  cloneStakeholders,
+  createEmptyProjectStakeholders,
+  type ProjectStakeholdersFormValues,
+} from '@/features/projects/schemas/projectStakeholders'
 import { mapWizardDraftToApi } from '@/features/projects/lib/mapProjectDraft'
 import type { Project } from '@/features/projects/types'
 
@@ -22,6 +27,7 @@ export type ProjectDraftState = {
   profile: ProjectProfileFormValues
   certification: ProjectCertificationFormValues
   timeline: ProjectTimelineFormValues
+  stakeholders: ProjectStakeholdersFormValues
   project: Partial<Project>
 }
 
@@ -30,6 +36,7 @@ const initialState: ProjectDraftState = {
   profile: emptyProjectProfile,
   certification: emptyProjectCertification,
   timeline: createEmptyProjectTimeline(),
+  stakeholders: createEmptyProjectStakeholders(),
   project: mapWizardDraftToApi(emptyProjectProfile, emptyProjectCertification, emptyProjectTimeline),
 }
 
@@ -51,6 +58,7 @@ export const projectDraftSlice = createSlice({
         profile?: ProjectProfileFormValues
         certification?: ProjectCertificationFormValues
         timeline?: ProjectTimelineFormValues
+        stakeholders?: ProjectStakeholdersFormValues
         currentStep?: number
       }>,
     ) {
@@ -62,6 +70,9 @@ export const projectDraftSlice = createSlice({
       }
       if (action.payload.timeline) {
         state.timeline = cloneTimeline(action.payload.timeline)
+      }
+      if (action.payload.stakeholders) {
+        state.stakeholders = cloneStakeholders(action.payload.stakeholders)
       }
       if (action.payload.currentStep != null) {
         state.currentStep = action.payload.currentStep

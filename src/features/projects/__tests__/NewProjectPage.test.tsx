@@ -5,7 +5,9 @@ import { renderNewProjectPage } from '@/test/utils'
 import { emptyProjectProfile } from '@/features/projects/schemas/projectProfile'
 import { emptyProjectCertification } from '@/features/projects/schemas/projectCertification'
 import { emptyProjectTimeline, sampleProjectTimeline } from '@/features/projects/schemas/projectTimeline'
+import { createEmptyProjectStakeholders } from '@/features/projects/schemas/projectStakeholders'
 import { barPosition, buildGanttModel } from '@/features/projects/lib/timeline'
+import { DEFAULT_STAKEHOLDER_CATEGORIES } from '@/features/projects/lib/stakeholderCatalog'
 
 vi.mock('sonner', () => ({
   toast: {
@@ -17,6 +19,17 @@ vi.mock('sonner', () => ({
 vi.mock('@/features/projects/api/projectsApi', () => ({
   useListCertificationsQuery: () => ({ data: undefined, isLoading: false }),
   useGetCertificationQuery: () => ({ data: undefined, isLoading: false }),
+}))
+
+const createStakeholderMock = vi.hoisted(() => vi.fn())
+
+vi.mock('@/features/stakeholders/api/stakeholdersApi', () => ({
+  useListStakeholderBucketsQuery: () => ({ data: undefined, isLoading: false, isError: false }),
+  useListStakeholderRolesQuery: () => ({ data: undefined, isLoading: false, isError: false }),
+  useCreateStakeholderMutation: () => [
+    createStakeholderMock.mockReturnValue({ unwrap: () => Promise.resolve({ id: 's1' }) }),
+    { isLoading: false },
+  ],
 }))
 
 async function completeStep1(user: ReturnType<typeof userEvent.setup>) {
@@ -217,8 +230,8 @@ describe('NewProjectPage', () => {
   it('opens later wizard steps as placeholders', async () => {
     const user = userEvent.setup()
     renderNewProjectPage()
-    await user.click(screen.getByTestId('wizard-step-6'))
-    expect(await screen.findByRole('heading', { name: 'Project Stakeholders' })).toBeInTheDocument()
+    await user.click(screen.getByTestId('wizard-step-5'))
+    expect(await screen.findByRole('heading', { name: 'Review' })).toBeInTheDocument()
     expect(screen.getByText('This step will be available in a later release.')).toBeInTheDocument()
   })
 
@@ -397,5 +410,118 @@ describe('NewProjectPage', () => {
 
     await user.click(screen.getByLabelText(/remove site visit 1/i))
     expect(screen.queryByTestId('gantt-marker-site-0')).not.toBeInTheDocument()
+  })
+
+  it('renders the optional stakeholders step from the review placeholder', async () => {
+    const user = userEvent.setup()
+    const { store } = renderNewProjectPage({
+      preloadedState: { projectDraft: { currentStep: 5 } },
+    })
+    await user.click(screen.getByRole('button', { name: /next: stakeholders/i }))
+    expect(await screen.findByTestId('stakeholders-form')).toBeInTheDocument()
+    expect(screen.getByText('Step 6 of 6 · Optional')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Stakeholder Information' })).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Add the people working on this project and choose what each can access. You can skip this step and invite stakeholders later.',
+      ),
+    ).toBeInTheDocument()
+    for (const category of DEFAULT_STAKEHOLDER_CATEGORIES) {
+      expect(screen.getByText(category.name)).toBeInTheDocument()
+    }
+    expect(screen.getAllByPlaceholderText('Enter email address')).toHaveLength(
+      DEFAULT_STAKEHOLDER_CATEGORIES.length,
+    )
+    expect(screen.getByRole('button', { name: 'Save stakeholders' })).toBeInTheDocument()
+    expect(store.getState().projectDraft.currentStep).toBe(6)
+  })
+
+  it('saves a blank optional stakeholders step and persists filled emails', async () => {
+    const user = userEvent.setup()
+    const { store } = renderNewProjectPage({
+      preloadedState: { projectDraft: { currentStep: 6 } },
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Save stakeholders' }))
+    const { toast } = await import('sonner')
+    expect(toast.success).toHaveBeenCalledWith('Stakeholders saved')
+    expect(createStakeholderMock).not.toHaveBeenCalled()
+
+    await user.type(
+      screen.getByTestId('stakeholder-email-architect-0'),
+      'architect@example.com',
+    )
+    await user.selectOptions(screen.getByTestId('stakeholder-role-architect-0'), 'editor')
+    await user.click(screen.getByRole('button', { name: 'Save draft' }))
+    await waitFor(() => {
+      expect(
+        store.getState().projectDraft.stakeholders.people.some(
+          (person) => person.email === 'architect@example.com' && person.role === 'editor',
+        ),
+      ).toBe(true)
+    })
+  })
+
+  it('validates emails and can add or remove extra rows in a category', async () => {
+    const user = userEvent.setup()
+    renderNewProjectPage({
+      preloadedState: { projectDraft: { currentStep: 6 } },
+    })
+
+    await user.type(screen.getByTestId('stakeholder-email-architect-0'), 'not-valid')
+    await user.click(screen.getByRole('button', { name: 'Save stakeholders' }))
+    expect(await screen.findByText('Enter a valid email')).toBeInTheDocument()
+
+    await user.click(screen.getByTestId('add-more-architect'))
+    expect(screen.getByTestId('stakeholder-email-architect-1')).toBeInTheDocument()
+    await user.click(screen.getByLabelText(/remove architect 2/i))
+    expect(screen.queryByTestId('stakeholder-email-architect-1')).not.toBeInTheDocument()
+  })
+
+  it('posts stakeholders when the draft already has a project id', async () => {
+    const user = userEvent.setup()
+    renderNewProjectPage({
+      preloadedState: {
+        projectDraft: {
+          currentStep: 6,
+          stakeholders: {
+            people: [
+              ...createEmptyProjectStakeholders().people.filter(
+                (person) => person.categoryId !== 'architect',
+              ),
+              {
+                id: 'arch-1',
+                categoryId: 'architect',
+                email: 'architect@example.com',
+                role: 'admin',
+              },
+            ],
+          },
+          project: { id: 'proj-1', name: 'Harbor Campus', certificationId: 'griha' },
+        },
+      },
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Save stakeholders' }))
+    await waitFor(() => {
+      expect(createStakeholderMock).toHaveBeenCalledWith({
+        projectId: 'proj-1',
+        values: {
+          name: 'architect',
+          email: 'architect@example.com',
+          bucketId: 'architect',
+          role: 'admin',
+        },
+      })
+    })
+  })
+
+  it('returns to the review placeholder from the stakeholders back button', async () => {
+    const user = userEvent.setup()
+    renderNewProjectPage({
+      preloadedState: { projectDraft: { currentStep: 6 } },
+    })
+    await user.click(screen.getByTestId('stakeholders-back'))
+    expect(await screen.findByRole('heading', { name: 'Review' })).toBeInTheDocument()
   })
 })

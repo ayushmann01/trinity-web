@@ -8,6 +8,7 @@ import {
 import { emptyProjectProfile } from '@/features/projects/schemas/projectProfile'
 import { emptyProjectCertification } from '@/features/projects/schemas/projectCertification'
 import { emptyProjectTimeline, sampleProjectTimeline } from '@/features/projects/schemas/projectTimeline'
+import { createEmptyProjectStakeholders } from '@/features/projects/schemas/projectStakeholders'
 import { mapWizardDraftToApi } from '@/features/projects/lib/mapProjectDraft'
 
 describe('projectDraftSlice', () => {
@@ -43,6 +44,7 @@ describe('projectDraftSlice', () => {
       profile,
       certification: emptyProjectCertification,
       timeline: emptyProjectTimeline,
+      stakeholders: createEmptyProjectStakeholders(),
       project: mapWizardDraftToApi(profile, emptyProjectCertification, emptyProjectTimeline),
     }
     const store = setupStore({ projectDraft: saved })
@@ -75,5 +77,19 @@ describe('projectDraftSlice', () => {
       designPhaseStart: '2027-03-01',
       certificationDeadline: '2027-12-20',
     })
+  })
+
+  it('persists stakeholder rows in the wizard draft', () => {
+    const store = setupStore()
+    const stakeholders = createEmptyProjectStakeholders()
+    stakeholders.people[0] = {
+      ...stakeholders.people[0],
+      email: 'lead@example.com',
+      role: 'editor',
+    }
+    store.dispatch(persistProjectDraft({ currentStep: 6, stakeholders }))
+    expect(store.getState().projectDraft.currentStep).toBe(6)
+    expect(store.getState().projectDraft.stakeholders.people[0]?.email).toBe('lead@example.com')
+    expect(store.getState().projectDraft.stakeholders.people[0]?.role).toBe('editor')
   })
 })
