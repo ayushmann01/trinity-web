@@ -3,9 +3,12 @@ import { render, type RenderOptions } from '@testing-library/react'
 import { Provider } from 'react-redux'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { setupStore, type AppStore, type RootState } from '@/app/store'
+import type { ProjectDraftState } from '@/features/projects/state/projectDraftSlice'
 import { NewProjectPage } from '@/features/projects/pages/NewProjectPage'
 import { emptyProjectProfile } from '@/features/projects/schemas/projectProfile'
 import { emptyProjectCertification } from '@/features/projects/schemas/projectCertification'
+import { emptyProjectTimeline } from '@/features/projects/schemas/projectTimeline'
+import { emptyProjectStakeholders } from '@/features/projects/schemas/projectStakeholders'
 import { mapWizardDraftToApi } from '@/features/projects/lib/mapProjectDraft'
 
 export const authedState: Pick<RootState, 'auth'> = {
@@ -14,6 +17,15 @@ export const authedState: Pick<RootState, 'auth'> = {
     refreshToken: 'test-refresh',
     user: { id: 'u1', email: 'tester@example.com', name: 'Tester' },
   },
+}
+
+export const emptyDraftState = {
+  currentStep: 1,
+  profile: emptyProjectProfile,
+  certification: emptyProjectCertification,
+  timeline: emptyProjectTimeline,
+  stakeholders: emptyProjectStakeholders,
+  project: mapWizardDraftToApi(emptyProjectProfile, emptyProjectCertification, emptyProjectTimeline),
 }
 
 export function renderWithStore(
@@ -42,19 +54,19 @@ export function renderWithStore(
 
 export function renderNewProjectPage(
   options: {
-    preloadedState?: Partial<RootState>
+    preloadedState?: Omit<Partial<RootState>, 'projectDraft'> & {
+      projectDraft?: Partial<ProjectDraftState>
+    }
     route?: string
   } = {},
 ) {
   const store = setupStore({
     ...authedState,
-    projectDraft: {
-      currentStep: 1,
-      profile: emptyProjectProfile,
-      certification: emptyProjectCertification,
-      project: mapWizardDraftToApi(emptyProjectProfile, emptyProjectCertification),
-    },
     ...options.preloadedState,
+    projectDraft: {
+      ...emptyDraftState,
+      ...options.preloadedState?.projectDraft,
+    },
   })
 
   const view = render(

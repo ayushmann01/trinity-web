@@ -1,7 +1,12 @@
 import type { Project } from '@/features/projects/types'
 import type { ProjectProfileFormValues } from '@/features/projects/schemas/projectProfile'
 import type { ProjectCertificationFormValues } from '@/features/projects/schemas/projectCertification'
+import {
+  emptyProjectTimeline,
+  type ProjectTimelineFormValues,
+} from '@/features/projects/schemas/projectTimeline'
 import { mapProjectProfileToApi } from '@/features/projects/lib/mapProjectProfile'
+import { mapProjectTimelineToApi } from '@/features/projects/lib/mapProjectTimeline'
 
 export function mapProjectCertificationToApi(
   values: ProjectCertificationFormValues,
@@ -19,12 +24,15 @@ export function mapProjectCertificationToApi(
 export function mapWizardDraftToApi(
   profile: ProjectProfileFormValues,
   certification: ProjectCertificationFormValues,
+  timeline: ProjectTimelineFormValues = emptyProjectTimeline,
 ): Partial<Project> {
   const fromProfile = mapProjectProfileToApi(profile)
   const fromCertification = mapProjectCertificationToApi(certification)
+  const fromTimeline = mapProjectTimelineToApi(timeline)
   return {
     ...fromProfile,
     ...fromCertification,
+    ...fromTimeline,
     typologyId: fromCertification.typologyId ?? fromProfile.typologyId,
   }
 }

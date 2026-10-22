@@ -21,8 +21,8 @@ export const PROJECT_SETUP_STEPS = [
   {
     id: 4,
     label: 'Timeline',
-    pageTitle: 'Project Timeline',
-    subtitle: 'Key dates used in reports and reviews.',
+    pageTitle: 'Project timeline',
+    subtitle: 'Key dates drive task due dates for every POC and the progress projections.',
   },
   {
     id: 5,
@@ -33,8 +33,9 @@ export const PROJECT_SETUP_STEPS = [
   {
     id: 6,
     label: 'Stakeholders (optional)',
-    pageTitle: 'Project Stakeholders',
-    subtitle: 'People who will collaborate on this project.',
+    pageTitle: 'Stakeholder Information',
+    subtitle:
+      'Add the people working on this project and choose what each can access. You can skip this step and invite stakeholders later.',
   },
 ] as const
 

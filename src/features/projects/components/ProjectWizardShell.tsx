@@ -2,12 +2,14 @@ import type { ReactNode } from 'react'
 import commanLogo from '@/assets/comman-logo.png'
 import { Button } from '@/shared/ui/button'
 import { WizardStepper } from '@/features/projects/components/WizardStepper'
+import { cn } from '@/shared/lib/utils'
 
 type ProjectWizardShellProps = {
   currentStep: number
   onStepChange: (step: number) => void
   onSaveDraft: () => void
-  onCancel: () => void
+  onExit: () => void
+  contentClassName?: string
   children: ReactNode
 }
 
@@ -15,7 +17,8 @@ export function ProjectWizardShell({
   currentStep,
   onStepChange,
   onSaveDraft,
-  onCancel,
+  onExit,
+  contentClassName,
   children,
 }: ProjectWizardShellProps) {
   return (
@@ -44,10 +47,10 @@ export function ProjectWizardShell({
             variant="outline"
             size="sm"
             className="h-8 border-neutral-200 bg-white text-xs font-medium text-neutral-800 shadow-none hover:bg-neutral-50"
-            onClick={onCancel}
-            data-testid="cancel-wizard"
+            onClick={onExit}
+            data-testid="exit-wizard"
           >
-            Cancel
+            Exit
           </Button>
         </div>
       </header>
@@ -56,7 +59,9 @@ export function ProjectWizardShell({
           <WizardStepper currentStep={currentStep} onStepChange={onStepChange} />
         </aside>
         <main className="flex-1 overflow-y-auto bg-white">
-          <div className="mx-auto w-full max-w-[720px] px-10 py-8">{children}</div>
+          <div className={cn('mx-auto w-full px-10 py-8', contentClassName ?? 'max-w-[720px]')}>
+            {children}
+          </div>
         </main>
       </div>
     </div>

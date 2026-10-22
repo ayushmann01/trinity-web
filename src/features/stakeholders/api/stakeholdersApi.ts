@@ -5,6 +5,12 @@ export type Stakeholder = {
   name: string
   email?: string
   bucketId?: string
+  role?: string
+}
+
+export type StakeholderRole = {
+  id: string
+  name: string
 }
 
 export type StakeholderBucket = {
@@ -17,6 +23,9 @@ export const stakeholdersApi = baseApi.injectEndpoints({
     listStakeholderBuckets: build.query<StakeholderBucket[], void>({
       query: () => ({ url: '/stakeholders/buckets' }),
       providesTags: ['StakeholderBuckets'],
+    }),
+    listStakeholderRoles: build.query<StakeholderRole[], void>({
+      query: () => ({ url: '/stakeholders/roles' }),
     }),
     listStakeholders: build.query<Stakeholder[], string>({
       query: (projectId) => ({ url: `/projects/${projectId}/stakeholders` }),
@@ -38,6 +47,7 @@ export const stakeholdersApi = baseApi.injectEndpoints({
 
 export const {
   useListStakeholderBucketsQuery,
+  useListStakeholderRolesQuery,
   useListStakeholdersQuery,
   useCreateStakeholderMutation,
 } = stakeholdersApi
