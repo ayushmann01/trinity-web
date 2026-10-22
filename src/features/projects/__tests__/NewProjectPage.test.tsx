@@ -3,6 +3,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderNewProjectPage } from '@/test/utils'
 import { emptyProjectProfile } from '@/features/projects/schemas/projectProfile'
+import { emptyProjectCertification } from '@/features/projects/schemas/projectCertification'
 
 vi.mock('sonner', () => ({
   toast: {
@@ -13,7 +14,18 @@ vi.mock('sonner', () => ({
 
 vi.mock('@/features/projects/api/projectsApi', () => ({
   useListCertificationsQuery: () => ({ data: undefined, isLoading: false }),
+  useGetCertificationQuery: () => ({ data: undefined, isLoading: false }),
 }))
+
+async function completeStep1(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByLabelText(/project title/i), 'Harbor Campus')
+  await user.type(screen.getByLabelText(/^location/i), 'Mumbai')
+  await user.selectOptions(screen.getByLabelText(/typology/i), 'new-construction')
+  await user.type(screen.getByLabelText(/plot area/i), '1500')
+  await user.type(screen.getByLabelText(/total built-up area/i), '4200')
+  await user.click(screen.getByRole('button', { name: /certification information/i }))
+  expect(await screen.findByTestId('certification-form')).toBeInTheDocument()
+}
 
 describe('NewProjectPage', () => {
   beforeEach(() => {
@@ -42,18 +54,17 @@ describe('NewProjectPage', () => {
     expect(screen.getByLabelText(/project id/i)).toBeDisabled()
     expect(screen.getByLabelText(/project id/i)).toHaveAttribute('placeholder', 'CMN-[auto]')
     expect(screen.getByText('Site and Building Details')).toBeInTheDocument()
-    expect(screen.getByText('Used by calculators and credit thresholds.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /certification information/i })).toBeInTheDocument()
 
     const stepper = screen.getByTestId('wizard-stepper')
     expect(within(stepper).getByText('Project set-up')).toBeInTheDocument()
     expect(screen.getByTestId('wizard-step-1')).toHaveAttribute('aria-current', 'step')
-    expect(screen.getByTestId('wizard-step-2')).not.toHaveAttribute('aria-current')
-    expect(within(stepper).getByText('Certification Details')).toBeInTheDocument()
+    expect(within(stepper).getByText('Project information')).toBeInTheDocument()
+    expect(within(stepper).getByText('Certification')).toBeInTheDocument()
     expect(within(stepper).getByText('Scorecard')).toBeInTheDocument()
-    expect(within(stepper).getByText('Project Timeline')).toBeInTheDocument()
+    expect(within(stepper).getByText('Timeline')).toBeInTheDocument()
     expect(within(stepper).getByText('Review')).toBeInTheDocument()
-    expect(within(stepper).getByText('Project Stakeholders')).toBeInTheDocument()
+    expect(within(stepper).getByText('Stakeholders (optional)')).toBeInTheDocument()
   })
 
   it('marks required fields with a red asterisk', () => {
@@ -87,58 +98,111 @@ describe('NewProjectPage', () => {
     expect(screen.getByRole('heading', { name: 'Project Profile' })).toBeInTheDocument()
   })
 
-  it('advances to the certification placeholder after a valid profile', async () => {
+  it('advances to certification details after a valid profile', async () => {
     const user = userEvent.setup()
     const { store } = renderNewProjectPage()
+    await completeStep1(user)
 
-    await user.type(screen.getByLabelText(/project title/i), 'Harbor Campus')
-    await user.type(screen.getByLabelText(/^location/i), 'Mumbai')
-    await user.selectOptions(screen.getByLabelText(/typology/i), 'new-construction')
-    await user.type(screen.getByLabelText(/plot area/i), '1500')
-    await user.type(screen.getByLabelText(/total built-up area/i), '4200')
-    await user.click(screen.getByRole('button', { name: /certification information/i }))
-
-    expect(await screen.findByTestId('placeholder-step')).toBeInTheDocument()
     expect(screen.getByText('Step 2 of 6')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Certification Details' })).toBeInTheDocument()
     expect(screen.getByTestId('wizard-step-2')).toHaveAttribute('aria-current', 'step')
     expect(store.getState().projectDraft.currentStep).toBe(2)
     expect(store.getState().projectDraft.profile.name).toBe('Harbor Campus')
-    expect(store.getState().projectDraft.project).toMatchObject({
-      name: 'Harbor Campus',
-      location: 'Mumbai',
+    expect(screen.getByRole('button', { name: /continue to griha scorecard/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /check griha eligibility/i })).toBeInTheDocument()
+    expect(screen.getByTestId('stage-pre-certification')).toHaveAttribute('aria-checked', 'true')
+  })
+
+  it('validates required certification fields before leaving step 2', async () => {
+    const user = userEvent.setup()
+    renderNewProjectPage()
+    await completeStep1(user)
+
+    await user.click(screen.getByRole('button', { name: /continue to griha scorecard/i }))
+    expect(await screen.findByText('Certification is required')).toBeInTheDocument()
+    expect(screen.getByText('Version is required')).toBeInTheDocument()
+    expect(screen.getByText('Target rating is required')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Certification Details' })).toBeInTheDocument()
+  })
+
+  it('populates dependent options from the selected certification and continues to step 3', async () => {
+    const user = userEvent.setup()
+    const { store } = renderNewProjectPage()
+    await completeStep1(user)
+
+    await user.selectOptions(screen.getByLabelText(/certification \*/i), 'griha')
+    await user.selectOptions(screen.getByLabelText(/version \*/i), 'v2019')
+    await user.selectOptions(screen.getByLabelText(/^category$/i), 'new-buildings')
+    await user.selectOptions(screen.getByLabelText(/^typology$/i), 'new-construction')
+    await user.selectOptions(screen.getByLabelText(/target rating \*/i), '3-star')
+    await user.click(screen.getByTestId('stage-certification'))
+    expect(screen.getByTestId('stage-certification')).toHaveAttribute('aria-checked', 'true')
+
+    await user.click(screen.getByRole('button', { name: /continue to griha scorecard/i }))
+    expect(await screen.findByTestId('placeholder-step')).toBeInTheDocument()
+    expect(screen.getByText('Step 3 of 6')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Scorecard' })).toBeInTheDocument()
+    expect(store.getState().projectDraft.currentStep).toBe(3)
+    expect(store.getState().projectDraft.certification).toMatchObject({
+      certificationId: 'griha',
+      versionId: 'v2019',
+      categoryId: 'new-buildings',
       typologyId: 'new-construction',
-      plotArea: 1500,
-      totalBuiltUpArea: 4200,
+      targetRatingId: '3-star',
+      stage: 'certification',
+    })
+    expect(store.getState().projectDraft.project).toMatchObject({
+      certificationId: 'griha',
+      certificationVersionId: 'v2019',
+      targetRating: '3-star',
+      certificationStage: 'certification',
     })
   })
 
-  it('saves the draft into redux so a remount restores values', async () => {
+  it('returns to step 1 from certification details without losing values', async () => {
+    const user = userEvent.setup()
+    renderNewProjectPage()
+    await completeStep1(user)
+
+    await user.selectOptions(screen.getByLabelText(/certification \*/i), 'griha')
+    await user.click(screen.getByTestId('certification-back'))
+
+    expect(await screen.findByRole('heading', { name: 'Project Profile' })).toBeInTheDocument()
+    expect(screen.getByLabelText(/project title/i)).toHaveValue('Harbor Campus')
+    expect(screen.getByLabelText(/^location/i)).toHaveValue('Mumbai')
+  })
+
+  it('saves both wizard steps into redux so a remount restores values', async () => {
     const user = userEvent.setup()
     const { store, unmount } = renderNewProjectPage()
-
-    await user.type(screen.getByLabelText(/project title/i), 'Saved Draft')
-    await user.type(screen.getByLabelText(/^location/i), 'Hyderabad')
+    await completeStep1(user)
+    await user.selectOptions(screen.getByLabelText(/certification \*/i), 'igbc')
     await user.click(screen.getByRole('button', { name: 'Save draft' }))
 
     await waitFor(() => {
-      expect(store.getState().projectDraft.profile.name).toBe('Saved Draft')
+      expect(store.getState().projectDraft.certification.certificationId).toBe('igbc')
     })
-    expect(store.getState().projectDraft.profile.location).toBe('Hyderabad')
+    expect(store.getState().projectDraft.profile.name).toBe('Harbor Campus')
+    expect(store.getState().projectDraft.currentStep).toBe(2)
 
     const { toast } = await import('sonner')
     expect(toast.success).toHaveBeenCalledWith('Draft saved')
 
     const saved = store.getState().projectDraft
     unmount()
-    renderNewProjectPage({
-      preloadedState: {
-        projectDraft: saved,
-      },
-    })
+    renderNewProjectPage({ preloadedState: { projectDraft: saved } })
 
-    expect(screen.getByLabelText(/project title/i)).toHaveValue('Saved Draft')
-    expect(screen.getByLabelText(/^location/i)).toHaveValue('Hyderabad')
+    expect(screen.getByRole('heading', { name: 'Certification Details' })).toBeInTheDocument()
+    expect(screen.getByLabelText(/certification \*/i)).toHaveValue('igbc')
+    expect(screen.getByRole('button', { name: /continue to igbc scorecard/i })).toBeInTheDocument()
+  })
+
+  it('opens the eligibility placeholder from the callout', async () => {
+    const user = userEvent.setup()
+    renderNewProjectPage()
+    await completeStep1(user)
+    await user.click(screen.getByRole('link', { name: /check griha eligibility/i }))
+    expect(screen.getByText('Eligibility placeholder')).toBeInTheDocument()
   })
 
   it('navigates to the projects list on cancel', async () => {
@@ -155,6 +219,7 @@ describe('NewProjectPage', () => {
         projectDraft: {
           currentStep: 1,
           profile: emptyProjectProfile,
+          certification: emptyProjectCertification,
           project: { name: '' },
         },
       },

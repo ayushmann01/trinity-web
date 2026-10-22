@@ -1,32 +1,39 @@
 export const PROJECT_SETUP_STEPS = [
   {
     id: 1,
-    label: 'Project Profile',
+    label: 'Project information',
+    pageTitle: 'Project Profile',
     subtitle: 'Basic details used across the scorecard, reports and documents.',
   },
   {
     id: 2,
-    label: 'Certification Details',
-    subtitle: 'Rating system, typology alignment and target credits.',
+    label: 'Certification',
+    pageTitle: 'Certification Details',
+    subtitle:
+      "Tell us where the project is and what you're aiming for. This decides which criteria and documents appear next.",
   },
   {
     id: 3,
     label: 'Scorecard',
+    pageTitle: 'Scorecard',
     subtitle: 'Credits you plan to attempt for this certification.',
   },
   {
     id: 4,
-    label: 'Project Timeline',
+    label: 'Timeline',
+    pageTitle: 'Project Timeline',
     subtitle: 'Key dates used in reports and reviews.',
   },
   {
     id: 5,
     label: 'Review',
+    pageTitle: 'Review',
     subtitle: 'Confirm details before creating the project.',
   },
   {
     id: 6,
-    label: 'Project Stakeholders',
+    label: 'Stakeholders (optional)',
+    pageTitle: 'Project Stakeholders',
     subtitle: 'People who will collaborate on this project.',
   },
 ] as const

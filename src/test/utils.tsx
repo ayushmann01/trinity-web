@@ -5,7 +5,8 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { setupStore, type AppStore, type RootState } from '@/app/store'
 import { NewProjectPage } from '@/features/projects/pages/NewProjectPage'
 import { emptyProjectProfile } from '@/features/projects/schemas/projectProfile'
-import { mapProjectProfileToApi } from '@/features/projects/lib/mapProjectProfile'
+import { emptyProjectCertification } from '@/features/projects/schemas/projectCertification'
+import { mapWizardDraftToApi } from '@/features/projects/lib/mapProjectDraft'
 
 export const authedState: Pick<RootState, 'auth'> = {
   auth: {
@@ -50,7 +51,8 @@ export function renderNewProjectPage(
     projectDraft: {
       currentStep: 1,
       profile: emptyProjectProfile,
-      project: mapProjectProfileToApi(emptyProjectProfile),
+      certification: emptyProjectCertification,
+      project: mapWizardDraftToApi(emptyProjectProfile, emptyProjectCertification),
     },
     ...options.preloadedState,
   })
@@ -60,6 +62,7 @@ export function renderNewProjectPage(
       <MemoryRouter initialEntries={[options.route ?? '/projects/new']}>
         <Routes>
           <Route path="/projects/new" element={<NewProjectPage />} />
+          <Route path="/projects/new/eligibility" element={<div>Eligibility placeholder</div>} />
           <Route path="/app/projects" element={<div>Projects list</div>} />
         </Routes>
       </MemoryRouter>
