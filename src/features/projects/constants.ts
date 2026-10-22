@@ -21,8 +21,8 @@ export const PROJECT_SETUP_STEPS = [
   {
     id: 4,
     label: 'Timeline',
-    pageTitle: 'Project Timeline',
-    subtitle: 'Key dates used in reports and reviews.',
+    pageTitle: 'Project timeline',
+    subtitle: 'Key dates drive task due dates for every POC and the progress projections.',
   },
   {
     id: 5,

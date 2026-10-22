@@ -8,6 +8,29 @@ type ZodLikeSchema = {
   }
 }
 
+function assignIssue(
+  errors: FieldErrors<FieldValues>,
+  path: PropertyKey[],
+  issue: { code: string; message: string },
+) {
+  if (path.length === 0) return
+
+  let cursor: Record<PropertyKey, unknown> = errors
+  for (let index = 0; index < path.length - 1; index += 1) {
+    const segment = path[index]
+    const existing = cursor[segment]
+    if (existing == null || typeof existing !== 'object') {
+      cursor[segment] = {}
+    }
+    cursor = cursor[segment] as Record<PropertyKey, unknown>
+  }
+
+  const leaf = path[path.length - 1]
+  if (cursor[leaf] == null) {
+    cursor[leaf] = { type: issue.code, message: issue.message }
+  }
+}
+
 export function zodResolver<TFieldValues extends FieldValues>(
   schema: ZodLikeSchema,
 ): Resolver<TFieldValues> {
@@ -19,11 +42,7 @@ export function zodResolver<TFieldValues extends FieldValues>(
 
     const errors: FieldErrors<TFieldValues> = {}
     for (const issue of result.error?.issues ?? []) {
-      const key = issue.path[0]
-      if (typeof key !== 'string' || key in errors) continue
-      Object.assign(errors, {
-        [key]: { type: issue.code, message: issue.message },
-      })
+      assignIssue(errors, issue.path, issue)
     }
 
     return { values: {}, errors }
