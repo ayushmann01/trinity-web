@@ -142,13 +142,16 @@ function compareCriteria(left: CriteriaRecord, right: CriteriaRecord): number {
 
 export function childMap(rows: CriteriaRecord[]): Map<number, CriteriaRecord[]> {
   const children = new Map<number, CriteriaRecord[]>()
+  const order = new Map(rows.map((row, index) => [row.id, index]))
   for (const row of rows) {
     if (row.parent_id === row.id) continue
     const list = children.get(row.parent_id) ?? []
     list.push(row)
     children.set(row.parent_id, list)
   }
-  for (const list of children.values()) list.sort(compareCriteria)
+  for (const list of children.values()) {
+    list.sort((left, right) => (order.get(left.id) ?? 0) - (order.get(right.id) ?? 0) || compareCriteria(left, right))
+  }
   return children
 }
 

@@ -230,10 +230,11 @@ export function cloneTimeline(
   values: ProjectTimelineFormValues = emptyProjectTimeline,
 ): ProjectTimelineFormValues {
   return {
+    ...emptyProjectTimeline,
     ...values,
-    siteVisits: values.siteVisits.map((item) => ({ ...item })),
-    offWeeks: values.offWeeks.map((item) => ({ ...item })),
-    otherMilestones: values.otherMilestones.map((item) => ({ ...item })),
+    siteVisits: (values.siteVisits ?? []).map((item) => ({ ...item })),
+    offWeeks: (values.offWeeks ?? []).map((item) => ({ ...item })),
+    otherMilestones: (values.otherMilestones ?? []).map((item) => ({ ...item })),
   }
 }
 

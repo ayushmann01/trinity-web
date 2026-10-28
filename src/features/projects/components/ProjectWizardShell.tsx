@@ -24,7 +24,7 @@ export function ProjectWizardShell({
   children,
 }: ProjectWizardShellProps) {
   return (
-    <div className="flex min-h-screen flex-col bg-white text-neutral-900" data-testid="project-wizard">
+    <div className="flex h-screen min-h-0 flex-col bg-white text-neutral-900" data-testid="project-wizard">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-neutral-200 bg-white px-6">
         <div className="flex items-center gap-2.5">
           <img src={commanLogo} alt="Comman" className="h-[22px] w-auto" />

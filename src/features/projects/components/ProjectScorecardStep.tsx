@@ -208,8 +208,11 @@ export function ProjectScorecardStep({
           attemptedCount={leafCounts.attempted}
           totalCount={leafCounts.total}
         />
-        <div className="min-w-0 flex-1 overflow-y-auto px-6 py-5">
-          {selected ? <SelectedCriterionHeader node={selected} /> : null}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <div className="shrink-0 px-6 pt-5">
+            {selected ? <SelectedCriterionHeader node={selected} /> : null}
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-5">
           <ScorecardTree
             criteria={scored.criteria}
             notes={notes}
@@ -227,6 +230,7 @@ export function ProjectScorecardStep({
             isInactive={isInactive}
             selectedId={selected?.id ?? null}
           />
+          </div>
         </div>
       </div>
       <div className="flex shrink-0 items-center justify-between border-t border-neutral-200 bg-white px-6 py-4">

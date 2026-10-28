@@ -78,7 +78,7 @@ export function AttemptToggle({
           disabled && 'cursor-not-allowed opacity-40',
         )}
       >
-        <Check className="h-3 w-3" strokeWidth={3} aria-hidden="true" />
+        {state === 'YES' ? <Check className="h-3 w-3" strokeWidth={3} aria-hidden="true" /> : null}
       </button>
     </div>
   )

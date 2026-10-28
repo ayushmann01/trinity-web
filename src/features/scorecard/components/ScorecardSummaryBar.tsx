@@ -60,15 +60,15 @@ export function ScorecardSummaryBar({
       </div>
 
       <div className="min-w-0 flex-1 pt-1">
-        <div className="relative mb-2 flex h-6 items-center justify-between">
+        <div className="relative mb-2 h-6 w-full">
           {thresholds.map((tier) => {
             const left = (tier.points / scale) * 100
-            const active = activeThresholdId === tier.id || combined >= tier.points
             const highlighted = activeThresholdId === tier.id
+            const reached = combined >= tier.points
             return (
               <div
                 key={tier.id}
-                className="absolute -translate-x-1/2"
+                className="absolute top-0 -translate-x-1/2 whitespace-nowrap"
                 style={{ left: `${left}%` }}
               >
                 <span
@@ -76,7 +76,7 @@ export function ScorecardSummaryBar({
                     'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium',
                     highlighted
                       ? 'bg-neutral-900 text-white'
-                      : active
+                      : reached
                         ? 'bg-neutral-200 text-neutral-800'
                         : 'bg-neutral-100 text-neutral-500',
                   )}

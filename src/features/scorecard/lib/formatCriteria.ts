@@ -44,7 +44,9 @@ export function checklistInstruction(node: CriteriaNode): string {
 
 export function isChecklistParent(node: CriteriaNode): boolean {
   if (node.children.length === 0) return false
-  return node.children.every((child) => child.children.length === 0)
+  return node.children.every(
+    (child) => child.children.length === 0 && !child.criteria_id?.trim(),
+  )
 }
 
 export function aimText(node: CriteriaNode): string {
