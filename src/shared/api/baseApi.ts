@@ -36,6 +36,18 @@ type BaseQueryResult = {
   meta?: FetchBaseQueryMeta
 }
 
+type SessionTokens = {
+  accessToken?: string
+  access_token?: string
+  refreshToken?: string
+  refresh_token?: string
+}
+
+type RefreshEnvelope = SessionTokens & {
+  data?: SessionTokens & { session?: SessionTokens }
+  session?: SessionTokens
+}
+
 function unwrapEnvelope(result: BaseQueryResult): BaseQueryResult {
   if (result.data && typeof result.data === 'object' && result.data !== null) {
     const maybe = result.data as { data?: unknown }
@@ -76,14 +88,10 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
         extraOptions,
       )) as BaseQueryResult
       if (refreshResult.data && typeof refreshResult.data === 'object') {
-        const rr = refreshResult.data as {
-          accessToken?: string
-          access_token?: string
-          refreshToken?: string
-          refresh_token?: string
-        }
-        const newAccess = rr.accessToken ?? rr.access_token
-        const newRefresh = rr.refreshToken ?? rr.refresh_token ?? refreshToken
+        const payload = refreshResult.data as RefreshEnvelope
+        const source = payload.data?.session ?? payload.session ?? payload.data ?? payload
+        const newAccess = source?.accessToken ?? source?.access_token
+        const newRefresh = source?.refreshToken ?? source?.refresh_token ?? refreshToken
         if (newAccess) {
           api.dispatch(setTokens({ accessToken: newAccess, refreshToken: newRefresh }))
           // retry original query
