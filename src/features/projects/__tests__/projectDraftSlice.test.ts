@@ -7,6 +7,9 @@ import {
 } from '@/features/projects/state/projectDraftSlice'
 import { emptyProjectProfile } from '@/features/projects/schemas/projectProfile'
 import { emptyProjectCertification } from '@/features/projects/schemas/projectCertification'
+import { emptyProjectTimeline, sampleProjectTimeline } from '@/features/projects/schemas/projectTimeline'
+import { createEmptyProjectStakeholders } from '@/features/projects/schemas/projectStakeholders'
+import { emptyProjectScorecard } from '@/features/projects/schemas/projectScorecard'
 import { mapWizardDraftToApi } from '@/features/projects/lib/mapProjectDraft'
 
 describe('projectDraftSlice', () => {
@@ -41,7 +44,10 @@ describe('projectDraftSlice', () => {
       currentStep: 1,
       profile,
       certification: emptyProjectCertification,
-      project: mapWizardDraftToApi(profile, emptyProjectCertification),
+      timeline: emptyProjectTimeline,
+      stakeholders: createEmptyProjectStakeholders(),
+      scorecard: emptyProjectScorecard,
+      project: mapWizardDraftToApi(profile, emptyProjectCertification, emptyProjectTimeline),
     }
     const store = setupStore({ projectDraft: saved })
     expect(store.getState().projectDraft.profile.name).toBe('Reloaded Project')
@@ -56,5 +62,54 @@ describe('projectDraftSlice', () => {
     expect(store.getState().projectDraft.currentStep).toBe(1)
     expect(store.getState().projectDraft.profile).toEqual(emptyProjectProfile)
     expect(store.getState().projectDraft.project.name).toBe('')
+  })
+
+  it('persists timeline dates onto the mapped project', () => {
+    const store = setupStore()
+    store.dispatch(
+      persistProjectDraft({
+        currentStep: 4,
+        timeline: sampleProjectTimeline,
+      }),
+    )
+    expect(store.getState().projectDraft.currentStep).toBe(4)
+    expect(store.getState().projectDraft.timeline.projectStart).toBe('2027-01-15')
+    expect(store.getState().projectDraft.project).toMatchObject({
+      startDate: '2027-01-15',
+      designPhaseStart: '2027-03-01',
+      certificationDeadline: '2027-12-20',
+    })
+  })
+
+  it('persists stakeholder rows in the wizard draft', () => {
+    const store = setupStore()
+    const stakeholders = createEmptyProjectStakeholders()
+    stakeholders.people[0] = {
+      ...stakeholders.people[0],
+      email: 'lead@example.com',
+      role: 'editor',
+    }
+    store.dispatch(persistProjectDraft({ currentStep: 6, stakeholders }))
+    expect(store.getState().projectDraft.currentStep).toBe(6)
+    expect(store.getState().projectDraft.stakeholders.people[0]?.email).toBe('lead@example.com')
+    expect(store.getState().projectDraft.stakeholders.people[0]?.role).toBe('editor')
+  })
+
+  it('persists scorecard selections and notes in the wizard draft', () => {
+    const store = setupStore()
+    store.dispatch(
+      persistProjectDraft({
+        currentStep: 3,
+        scorecard: {
+          attemptedIds: [6603],
+          maybeIds: [6311],
+          notes: { '6600': 'Need shading study' },
+          summary: { pointsAttempted: 2, pointsMaybe: 1, pointsAvailable: 26 },
+        },
+      }),
+    )
+    expect(store.getState().projectDraft.scorecard.attemptedIds).toEqual([6603])
+    expect(store.getState().projectDraft.scorecard.maybeIds).toEqual([6311])
+    expect(store.getState().projectDraft.scorecard.notes['6600']).toBe('Need shading study')
   })
 })
