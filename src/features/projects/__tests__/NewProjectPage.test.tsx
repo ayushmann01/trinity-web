@@ -154,9 +154,9 @@ describe('NewProjectPage', () => {
     expect(screen.getByTestId('stage-certification')).toHaveAttribute('aria-checked', 'true')
 
     await user.click(screen.getByRole('button', { name: /continue to griha scorecard/i }))
-    expect(await screen.findByTestId('placeholder-step')).toBeInTheDocument()
-    expect(screen.getByText('Step 3 of 6')).toBeInTheDocument()
+    expect(await screen.findByTestId('scorecard-step')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Scorecard' })).toBeInTheDocument()
+    expect(screen.getByText(/GRIHA Scorecard/)).toBeInTheDocument()
     expect(store.getState().projectDraft.currentStep).toBe(3)
     expect(store.getState().projectDraft.certification).toMatchObject({
       certificationId: 'griha',
@@ -235,7 +235,7 @@ describe('NewProjectPage', () => {
     expect(screen.getByText('This step will be available in a later release.')).toBeInTheDocument()
   })
 
-  it('reaches the timeline step from the scorecard placeholder next button', async () => {
+  it('reaches the timeline step from the scorecard next button', async () => {
     const user = userEvent.setup()
     const { store } = renderNewProjectPage({
       preloadedState: {
@@ -249,6 +249,7 @@ describe('NewProjectPage', () => {
       },
     })
 
+    expect(screen.getByTestId('scorecard-step')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Scorecard' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /next: timeline/i }))
     expect(await screen.findByTestId('timeline-form')).toBeInTheDocument()
@@ -372,7 +373,7 @@ describe('NewProjectPage', () => {
     expect(remounted.store.getState().projectDraft.project.startDate).toBe('2027-01-20')
   })
 
-  it('returns to the scorecard placeholder from the timeline back button', async () => {
+  it('returns to the scorecard from the timeline back button', async () => {
     const user = userEvent.setup()
     renderNewProjectPage({
       preloadedState: {

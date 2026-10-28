@@ -19,6 +19,11 @@ import {
   createEmptyProjectStakeholders,
   type ProjectStakeholdersFormValues,
 } from '@/features/projects/schemas/projectStakeholders'
+import {
+  cloneScorecard,
+  emptyProjectScorecard,
+} from '@/features/projects/schemas/projectScorecard'
+import type { ProjectScorecardDraft } from '@/features/scorecard/types'
 import { mapWizardDraftToApi } from '@/features/projects/lib/mapProjectDraft'
 import type { Project } from '@/features/projects/types'
 
@@ -28,6 +33,7 @@ export type ProjectDraftState = {
   certification: ProjectCertificationFormValues
   timeline: ProjectTimelineFormValues
   stakeholders: ProjectStakeholdersFormValues
+  scorecard: ProjectScorecardDraft
   project: Partial<Project>
 }
 
@@ -37,6 +43,7 @@ const initialState: ProjectDraftState = {
   certification: emptyProjectCertification,
   timeline: createEmptyProjectTimeline(),
   stakeholders: createEmptyProjectStakeholders(),
+  scorecard: cloneScorecard(emptyProjectScorecard),
   project: mapWizardDraftToApi(emptyProjectProfile, emptyProjectCertification, emptyProjectTimeline),
 }
 
@@ -59,6 +66,7 @@ export const projectDraftSlice = createSlice({
         certification?: ProjectCertificationFormValues
         timeline?: ProjectTimelineFormValues
         stakeholders?: ProjectStakeholdersFormValues
+        scorecard?: ProjectScorecardDraft
         currentStep?: number
       }>,
     ) {
@@ -73,6 +81,9 @@ export const projectDraftSlice = createSlice({
       }
       if (action.payload.stakeholders) {
         state.stakeholders = cloneStakeholders(action.payload.stakeholders)
+      }
+      if (action.payload.scorecard) {
+        state.scorecard = cloneScorecard(action.payload.scorecard)
       }
       if (action.payload.currentStep != null) {
         state.currentStep = action.payload.currentStep

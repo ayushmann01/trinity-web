@@ -1,5 +1,5 @@
 import { baseApi } from '@/shared/api/baseApi'
-import type { Scorecard } from '@/features/scorecard/types'
+import type { ProjectCriteriaResponse, Scorecard } from '@/features/scorecard/types'
 
 export const scorecardApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -18,7 +18,30 @@ export const scorecardApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_res, _err, { projectId }) => [{ type: 'Scorecard', id: projectId }],
     }),
+    getProjectCriteria: build.query<ProjectCriteriaResponse, { projectId: string }>({
+      query: ({ projectId }) => ({ url: `/projects/${projectId}/criteria` }),
+      providesTags: (_res, _err, { projectId }) => [{ type: 'Scorecard', id: `${projectId}-criteria` }],
+    }),
+    saveProjectCriteria: build.mutation<
+      ProjectCriteriaResponse,
+      { projectId: string; attemptedIds: number[]; maybeIds: number[] }
+    >({
+      query: ({ projectId, attemptedIds, maybeIds }) => ({
+        url: `/projects/${projectId}/criteria`,
+        method: 'POST',
+        body: { attempted_ids: attemptedIds, maybe_ids: maybeIds },
+      }),
+      invalidatesTags: (_res, _err, { projectId }) => [
+        { type: 'Scorecard', id: projectId },
+        { type: 'Scorecard', id: `${projectId}-criteria` },
+      ],
+    }),
   }),
 })
 
-export const { useGetScorecardQuery, useSaveScorecardMutation } = scorecardApi
+export const {
+  useGetScorecardQuery,
+  useSaveScorecardMutation,
+  useGetProjectCriteriaQuery,
+  useSaveProjectCriteriaMutation,
+} = scorecardApi

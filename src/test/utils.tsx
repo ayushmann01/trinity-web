@@ -9,6 +9,7 @@ import { emptyProjectProfile } from '@/features/projects/schemas/projectProfile'
 import { emptyProjectCertification } from '@/features/projects/schemas/projectCertification'
 import { emptyProjectTimeline } from '@/features/projects/schemas/projectTimeline'
 import { emptyProjectStakeholders } from '@/features/projects/schemas/projectStakeholders'
+import { emptyProjectScorecard } from '@/features/projects/schemas/projectScorecard'
 import { mapWizardDraftToApi } from '@/features/projects/lib/mapProjectDraft'
 
 export const authedState: Pick<RootState, 'auth'> = {
@@ -25,6 +26,7 @@ export const emptyDraftState = {
   certification: emptyProjectCertification,
   timeline: emptyProjectTimeline,
   stakeholders: emptyProjectStakeholders,
+  scorecard: emptyProjectScorecard,
   project: mapWizardDraftToApi(emptyProjectProfile, emptyProjectCertification, emptyProjectTimeline),
 }
 

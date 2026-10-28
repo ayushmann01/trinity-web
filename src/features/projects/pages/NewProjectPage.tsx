@@ -10,6 +10,7 @@ import { ProjectProfileForm } from '@/features/projects/components/ProjectProfil
 import { CertificationDetailsForm } from '@/features/projects/components/CertificationDetailsForm'
 import { ProjectTimelineForm } from '@/features/projects/components/ProjectTimelineForm'
 import { ProjectStakeholdersForm } from '@/features/projects/components/ProjectStakeholdersForm'
+import { ProjectScorecardStep } from '@/features/projects/components/ProjectScorecardStep'
 import { WizardPlaceholderStep } from '@/features/projects/components/WizardPlaceholderStep'
 import { PROJECT_SETUP_STEPS } from '@/features/projects/constants'
 import {
@@ -36,10 +37,15 @@ import {
 } from '@/features/projects/schemas/projectStakeholders'
 import { persistProjectDraft } from '@/features/projects/state/projectDraftSlice'
 import { mapProjectStakeholdersToApi } from '@/features/projects/lib/mapProjectStakeholders'
+import {
+  DEFAULT_CERTIFICATIONS,
+  certificationDisplayName,
+} from '@/features/projects/lib/certificationCatalog'
 import { useCreateStakeholderMutation } from '@/features/stakeholders/api/stakeholdersApi'
+import type { ProjectScorecardDraft } from '@/features/scorecard/types'
+import { cloneScorecard } from '@/features/projects/schemas/projectScorecard'
 
 function placeholderNextLabel(step: number) {
-  if (step === 3) return 'Next: Timeline'
   if (step === 5) return 'Next: Stakeholders'
   return 'Next'
 }
@@ -119,10 +125,37 @@ export function NewProjectPage() {
         certification: values,
         timeline: timelineForm.getValues(),
         stakeholders: stakeholdersForm.getValues(),
+        scorecard: cloneScorecard(draft.scorecard),
         currentStep: 3,
       }),
     )
   })
+
+  const handleScorecardNext = (scorecard: ProjectScorecardDraft) => {
+    dispatch(
+      persistProjectDraft({
+        profile: profileForm.getValues(),
+        certification: certificationForm.getValues(),
+        timeline: timelineForm.getValues(),
+        stakeholders: stakeholdersForm.getValues(),
+        scorecard: cloneScorecard(scorecard),
+        currentStep: 4,
+      }),
+    )
+  }
+
+  const handleScorecardSave = (scorecard: ProjectScorecardDraft) => {
+    dispatch(
+      persistProjectDraft({
+        profile: profileForm.getValues(),
+        certification: certificationForm.getValues(),
+        timeline: timelineForm.getValues(),
+        stakeholders: stakeholdersForm.getValues(),
+        scorecard: cloneScorecard(scorecard),
+      }),
+    )
+    toast.success('Draft saved')
+  }
 
   const handleTimelineNext = timelineForm.handleSubmit((values) => {
     dispatch(
@@ -171,6 +204,7 @@ export function NewProjectPage() {
       onStepChange={(step) => persistDraft(step)}
       onSaveDraft={handleSaveDraft}
       onExit={handleExit}
+      fillHeight={currentStep === 3}
       contentClassName={currentStep === 4 ? 'max-w-[1100px]' : undefined}
     >
       {currentStep === 1 ? (
@@ -201,6 +235,15 @@ export function NewProjectPage() {
           <p className="mb-5 mt-1 text-[13px] text-neutral-500">{stepMeta.subtitle}</p>
           <CertificationDetailsForm form={certificationForm} onBack={() => persistDraft(1)} />
         </form>
+      ) : currentStep === 3 ? (
+        <ProjectScorecardStep
+          certificationName={certificationDisplayName(
+            DEFAULT_CERTIFICATIONS.find((item) => item.id === certificationDraft.certificationId),
+          )}
+          onBack={() => persistDraft(2)}
+          onNext={handleScorecardNext}
+          onSaveDraft={handleScorecardSave}
+        />
       ) : currentStep === 4 ? (
         <form onSubmit={handleTimelineNext} noValidate>
           <p className="text-[12px] text-neutral-400">Step 4 of 6</p>

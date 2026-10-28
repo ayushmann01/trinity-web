@@ -10,6 +10,7 @@ type ProjectWizardShellProps = {
   onSaveDraft: () => void
   onExit: () => void
   contentClassName?: string
+  fillHeight?: boolean
   children: ReactNode
 }
 
@@ -19,6 +20,7 @@ export function ProjectWizardShell({
   onSaveDraft,
   onExit,
   contentClassName,
+  fillHeight = false,
   children,
 }: ProjectWizardShellProps) {
   return (
@@ -58,8 +60,19 @@ export function ProjectWizardShell({
         <aside className="w-[232px] shrink-0 border-r border-neutral-200 bg-neutral-50">
           <WizardStepper currentStep={currentStep} onStepChange={onStepChange} />
         </aside>
-        <main className="flex-1 overflow-y-auto bg-white">
-          <div className={cn('mx-auto w-full px-10 py-8', contentClassName ?? 'max-w-[720px]')}>
+        <main
+          className={cn(
+            'flex-1 bg-white',
+            fillHeight ? 'flex min-h-0 flex-col overflow-hidden' : 'overflow-y-auto',
+          )}
+        >
+          <div
+            className={cn(
+              fillHeight
+                ? 'flex min-h-0 flex-1 flex-col'
+                : cn('mx-auto w-full px-10 py-8', contentClassName ?? 'max-w-[720px]'),
+            )}
+          >
             {children}
           </div>
         </main>
