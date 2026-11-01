@@ -5,6 +5,7 @@ import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { Button } from '@/shared/ui/button'
 import { Link } from 'react-router-dom'
+import { AuthPageFrame } from '@/features/auth/components/AuthPageFrame'
 import { useForgotPasswordMutation } from '@/features/auth/api/authApi'
 import { toast } from 'sonner'
 
@@ -28,7 +29,7 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-16">
+    <AuthPageFrame>
       <h1 className="text-2xl font-semibold mb-6">Forgot password</h1>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
@@ -47,6 +48,6 @@ export function ForgotPasswordPage() {
           Back to sign in
         </Link>
       </div>
-    </div>
+    </AuthPageFrame>
   )
 }
