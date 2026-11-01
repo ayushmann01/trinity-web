@@ -50,11 +50,7 @@ function CriterionSection({
     <article
       id={`criterion-${node.id}`}
       data-testid={`criterion-${node.id}`}
-      className={cn(
-        'rounded-[10px] border bg-white',
-        props.selectedId === node.id ? 'border-neutral-800' : 'border-neutral-200',
-        inactive && 'opacity-60',
-      )}
+      className={cn(inactive && 'opacity-60')}
     >
       <CriterionHeader node={node} depth={depth} leafToggle={leafToggle} inactive={inactive} onToggle={props.onToggle} />
       <ActionRow
@@ -92,7 +88,7 @@ function NestedCriterion({
     <div
       id={`criterion-${node.id}`}
       data-testid={`criterion-${node.id}`}
-      className={cn('rounded-[10px] border border-neutral-200 bg-white', inactive && 'opacity-50')}
+      className={cn(inactive && 'opacity-50')}
     >
       <CriterionHeader node={node} depth={depth} leafToggle={leafToggle} inactive={inactive} onToggle={props.onToggle} />
       <ActionRow
@@ -131,7 +127,7 @@ function CriterionHeader({
   onToggle: (id: number, clicked: 'YES' | 'MAYBE') => void
 }) {
   return (
-    <header className="flex items-start gap-2.5 px-3.5 py-3">
+    <header className="flex items-start gap-2.5 py-2">
       <CodeBadge code={chipCode(node.criteria_id) || displayCode(node.criteria_id, depth)} />
       {leafToggle ? (
         <AttemptToggle
@@ -218,7 +214,7 @@ function ActionRow({
   const hasRefs = Boolean(node.references || node.footnotes)
 
   return (
-    <div className="px-3.5 pb-3">
+    <div className="pb-2">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-4">
           <Popover>
@@ -292,7 +288,10 @@ function ChecklistBox({
   onToggle: (id: number, clicked: 'YES' | 'MAYBE') => void
 }) {
   return (
-    <div className="mx-3.5 mb-3.5 rounded-lg bg-neutral-50 p-2.5" data-testid={`checklist-${node.id}`}>
+    <div
+      className="mb-1 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5"
+      data-testid={`checklist-${node.id}`}
+    >
       <p className="mb-2 text-[11px] text-neutral-400">{checklistInstruction(node)}</p>
       <div className="space-y-1">
         {node.children.map((child) => {
@@ -303,12 +302,8 @@ function ChecklistBox({
               key={child.id}
               data-testid={`option-${child.id}`}
               className={cn(
-                'flex items-center gap-3 rounded-md border px-3 py-2',
-                yes
-                  ? 'border-blue-100 bg-blue-50/70'
-                  : maybe
-                    ? 'border-orange-100 bg-orange-50/70'
-                    : 'border-transparent bg-white',
+                'flex items-center gap-3 rounded-md px-3 py-2',
+                yes ? 'bg-blue-50/70' : maybe ? 'bg-orange-50/70' : 'bg-white',
                 inactive && !child.selectable && 'opacity-50',
               )}
             >
@@ -340,7 +335,7 @@ function ChecklistBox({
 }
 
 function TreeBranch({ children }: { children: ReactNode }) {
-  return <ul className="relative ml-5 border-l border-neutral-200 pl-5 pr-3.5 pb-3">{children}</ul>
+  return <ul className="relative ml-5 border-l border-neutral-200 pl-5 pb-2">{children}</ul>
 }
 
 function TreeNode({ children }: { children: ReactNode }) {

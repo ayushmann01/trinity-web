@@ -48,8 +48,12 @@ export function normalizeProject(raw: unknown): Project | null {
   return {
     id,
     name: firstString(src.name, src.project_title, src.projectTitle, src.title) ?? '',
+    certificationTitle: firstString(src.certificationTitle, src.certification_title),
     certificationId:
-      firstString(src.certificationId, src.certification_id) ?? nestedLabel(src.certification) ?? '',
+      firstString(src.certificationId, src.certification_id) ??
+      nestedLabel(src.certification) ??
+      firstString(src.certificationTitle, src.certification_title) ??
+      '',
     typologyId: firstString(src.typologyId, src.typology_id) ?? nestedLabel(src.typology),
     targetPoints: firstNumber(src.targetPoints, src.target_points),
     location: firstString(src.location),
@@ -77,6 +81,12 @@ export function projectTargetLabel(
   if (project.targetRating) return project.targetRating
   if (project.targetPoints != null) return String(project.targetPoints)
   return '-'
+}
+
+export function projectCertificationLabel(
+  project: Pick<Project, 'certificationTitle' | 'certificationId'>,
+): string {
+  return project.certificationTitle || project.certificationId || ''
 }
 
 export function normalizeProjectList(raw: unknown): {

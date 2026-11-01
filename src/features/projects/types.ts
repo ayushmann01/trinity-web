@@ -34,6 +34,7 @@ export type Project = {
   id: string
   name: string
   certificationId: string
+  certificationTitle?: string
   typologyId?: string
   targetPoints?: number
   location?: string
