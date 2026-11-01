@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AppLayout } from '@/app/ui/AppLayout'
+import { GuestRoute } from '@/app/GuestRoute'
 import { ProtectedRoute } from '@/app/ProtectedRoute'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { SignupPage } from '@/features/auth/pages/SignupPage'
@@ -18,6 +19,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/auth',
+    element: <GuestRoute />,
     children: [
       { path: 'login', element: <LoginPage /> },
       { path: 'signup', element: <SignupPage /> },
