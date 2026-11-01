@@ -279,17 +279,28 @@ function scoreNode(
       maybePts: !yes.has(row.id) && maybe.has(row.id) ? row.max_points : 0,
     }
   } else if (state === 'BRANCH') {
-    const userAttempts = new Set<number>([...yes, ...maybe])
-    const active = kids.filter((kid) => subtreeHasAttempt(kid, children, userAttempts))
-    const chosen =
-      active.find((kid) => subtreeHasAttempt(kid, children, yes)) ?? active[0] ?? null
-    result = { yesPts: 0, maybePts: 0 }
-    if (chosen) {
-      const childScore = scoreNode(chosen, children, yes, maybe, cache)
-      result = applyPointCap(row, childScore.yesPts, childScore.maybePts)
+    const yesKid = kids.find((kid) => subtreeHasAttempt(kid, children, yes)) ?? null
+    const maybeKid =
+      kids.find((kid) => subtreeHasAttempt(kid, children, maybe) && kid.id !== yesKid?.id) ?? null
+
+    let yesPts = 0
+    let maybePts = 0
+    if (yesKid) {
+      yesPts = scoreNode(yesKid, children, yes, maybe, cache).yesPts
     }
+    if (maybeKid) {
+      const maybeScore = scoreNode(maybeKid, children, yes, maybe, cache)
+      const maybeOptionPts = maybeScore.yesPts + maybeScore.maybePts
+      maybePts = Math.max(0, maybeOptionPts - yesPts)
+    } else if (yesKid) {
+      maybePts = (cache.get(yesKid.id) ?? scoreNode(yesKid, children, yes, maybe, cache)).maybePts
+    }
+
+    result = applyPointCap(row, yesPts, maybePts)
     for (const kid of kids) {
-      if (!chosen || kid.id !== chosen.id) scoreNode(kid, children, yes, maybe, cache)
+      if (kid.id !== yesKid?.id && kid.id !== maybeKid?.id) {
+        scoreNode(kid, children, yes, maybe, cache)
+      }
     }
   } else if (state === 'SUB_ROOT') {
     let yesCount = 0
