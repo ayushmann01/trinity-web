@@ -65,6 +65,14 @@ describe('ProjectScorecardStep', () => {
     expect(screen.getByRole('button', { name: /back to certification/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /next: timeline/i })).toBeInTheDocument()
     expect(screen.getByText('Save your selections as a draft')).toBeInTheDocument()
+
+    const checklists = screen.getAllByTestId(/checklist-/)
+    expect(checklists.length).toBeGreaterThan(0)
+    for (const list of checklists) {
+      expect(list).toHaveClass('border')
+      expect(list).toHaveClass('border-neutral-200')
+    }
+    expect(screen.getByTestId('criterion-6600')).not.toHaveClass('border')
   })
 
   it('toggles YES and MAYBE on a BRANCH option and persists the draft', async () => {

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   normalizeProject,
   normalizeProjectList,
+  projectCertificationLabel,
   projectTargetLabel,
 } from '@/features/projects/lib/normalizeProject'
 
@@ -10,16 +11,18 @@ describe('normalizeProject', () => {
     const project = normalizeProject({
       id: 42,
       project_title: 'Atrium Towers-101',
-      certification: 'GRIHA',
+      certification_title: 'GRIHA Version 2019',
       certification_target: '4 Star',
     })
 
     expect(project).toMatchObject({
       id: '42',
       name: 'Atrium Towers-101',
-      certificationId: 'GRIHA',
+      certificationTitle: 'GRIHA Version 2019',
+      certificationId: 'GRIHA Version 2019',
       targetRating: '4 Star',
     })
+    expect(projectCertificationLabel(project!)).toBe('GRIHA Version 2019')
     expect(projectTargetLabel(project!)).toBe('4 Star')
   })
 
@@ -80,7 +83,7 @@ describe('normalizeProjectList', () => {
           project_id: 1,
           project_title: 'Atrium Towers-101',
           certification_target: '4 Star',
-          certification: 'GRIHA',
+          certification_title: 'GRIHA Version 2019',
         },
       ],
       total: 1,
@@ -93,9 +96,10 @@ describe('normalizeProjectList', () => {
     expect(result.items[0]).toMatchObject({
       id: '1',
       name: 'Atrium Towers-101',
-      certificationId: 'GRIHA',
+      certificationTitle: 'GRIHA Version 2019',
       targetRating: '4 Star',
     })
+    expect(projectCertificationLabel(result.items[0]!)).toBe('GRIHA Version 2019')
   })
 
   it('accepts a bare array after envelope unwrap', () => {

@@ -1,6 +1,9 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { useListProjectsQuery } from '@/features/projects/api/projectsApi'
-import { projectTargetLabel } from '@/features/projects/lib/normalizeProject'
+import {
+  projectCertificationLabel,
+  projectTargetLabel,
+} from '@/features/projects/lib/normalizeProject'
 import { Button, buttonVariants } from '@/shared/ui/button'
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '@/shared/ui/table'
 
@@ -37,7 +40,7 @@ export function ProjectsListPage() {
               {data?.items?.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell>{p.name}</TableCell>
-                  <TableCell>{p.certificationId}</TableCell>
+                  <TableCell>{projectCertificationLabel(p)}</TableCell>
                   <TableCell>{projectTargetLabel(p)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
