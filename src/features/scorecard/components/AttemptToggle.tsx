@@ -1,4 +1,4 @@
-import { Check, Lock } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import type { AttemptState } from '@/features/scorecard/types'
 
@@ -21,19 +21,10 @@ export function AttemptToggle({
 
   if (mandatory) {
     return (
-      <div className="flex items-center gap-1" data-testid="mandatory-lock">
+      <div className="flex items-center" data-testid="mandatory-lock">
         <span
           className={cn(
-            'flex items-center justify-center rounded-[4px] bg-violet-600 text-white',
-            box,
-            disabled && 'opacity-40',
-          )}
-        >
-          <Lock className="h-3 w-3" aria-hidden="true" />
-        </span>
-        <span
-          className={cn(
-            'flex items-center justify-center rounded-[4px] bg-violet-600 text-white',
+            'flex items-center justify-center rounded-[5px] bg-violet-600 text-white',
             box,
             disabled && 'opacity-40',
           )}
@@ -53,10 +44,10 @@ export function AttemptToggle({
         disabled={disabled}
         onClick={() => onChange('MAYBE')}
         className={cn(
-          'flex items-center justify-center rounded-[4px] border text-[11px] leading-none',
+          'flex items-center justify-center rounded-[5px] border text-[11px] font-semibold leading-none',
           box,
           state === 'MAYBE'
-            ? 'border-amber-500 bg-amber-500 text-white'
+            ? 'border-orange-500 bg-orange-500 text-white'
             : 'border-neutral-300 bg-white text-neutral-400',
           disabled && 'cursor-not-allowed opacity-40',
         )}
@@ -70,7 +61,7 @@ export function AttemptToggle({
         disabled={disabled}
         onClick={() => onChange('YES')}
         className={cn(
-          'flex items-center justify-center rounded-[4px] border',
+          'flex items-center justify-center rounded-[5px] border',
           box,
           state === 'YES'
             ? 'border-blue-600 bg-blue-600 text-white'
@@ -95,13 +86,13 @@ export function ScoreBoxes({
 }) {
   return (
     <div className="flex items-center gap-1" aria-label={`${maybe} maybe, ${yes} yes, ${max} max`}>
-      <span className="flex h-6 min-w-6 items-center justify-center rounded-md bg-amber-100 px-1.5 text-[11px] font-medium text-amber-700">
+      <span className="flex h-[22px] min-w-[22px] items-center justify-center rounded-md bg-orange-100 px-1.5 text-[11px] font-medium text-orange-600">
         {maybe}
       </span>
-      <span className="flex h-6 min-w-6 items-center justify-center rounded-md bg-blue-100 px-1.5 text-[11px] font-medium text-blue-700">
+      <span className="flex h-[22px] min-w-[22px] items-center justify-center rounded-md bg-blue-100 px-1.5 text-[11px] font-medium text-blue-600">
         {yes}
       </span>
-      <span className="flex h-6 min-w-6 items-center justify-center rounded-md bg-neutral-800 px-1.5 text-[11px] font-medium text-white">
+      <span className="flex h-[22px] min-w-[22px] items-center justify-center rounded-md bg-neutral-100 px-1.5 text-[11px] font-medium text-neutral-500">
         {max}
       </span>
     </div>

@@ -96,7 +96,13 @@ export function ProjectScorecardStep({
     [rows, attemptedIds, maybeIds, targetMin, apiPayload],
   )
 
-  const selected = scored.criteria.find((item) => item.id === selectedId) ?? scored.criteria[0] ?? null
+  const preferredId =
+    scored.criteria.find((item) => (item.title ?? '').toLowerCase().includes('passive design'))?.id ??
+    null
+  const selected =
+    scored.criteria.find((item) => item.id === (selectedId ?? preferredId)) ??
+    scored.criteria[0] ??
+    null
 
   const children = useMemo(() => childMap(rows), [rows])
   const attempts = useMemo(
@@ -233,11 +239,11 @@ export function ProjectScorecardStep({
           </div>
         </div>
       </div>
-      <div className="flex shrink-0 items-center justify-between border-t border-neutral-200 bg-white px-6 py-4">
+      <div className="flex shrink-0 items-center justify-between border-t border-neutral-200 bg-white px-6 py-3.5">
         <Button
           type="button"
           variant="outline"
-          className="h-9 border-neutral-200 bg-white text-[13px] font-medium text-neutral-800 shadow-none"
+          className="h-9 rounded-md border-neutral-200 bg-white px-3 text-[13px] font-medium text-neutral-800 shadow-none hover:bg-neutral-50"
           onClick={() => {
             persistScorecard()
             onBack()
@@ -247,10 +253,10 @@ export function ProjectScorecardStep({
           <ArrowLeft className="mr-1.5 h-4 w-4" />
           Back to certification
         </Button>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <button
             type="button"
-            className="text-[12px] text-neutral-500 hover:text-neutral-800"
+            className="text-[12px] font-medium text-neutral-500 hover:text-neutral-800"
             onClick={() => {
               void handleSave()
             }}
@@ -260,7 +266,7 @@ export function ProjectScorecardStep({
           </button>
           <Button
             type="button"
-            className="h-9 bg-blue-600 px-4 text-[13px] font-medium text-white hover:bg-blue-700"
+            className="h-9 rounded-md bg-blue-600 px-4 text-[13px] font-medium text-white hover:bg-blue-700"
             onClick={() => onNext(currentDraft())}
             data-testid="scorecard-next"
           >
