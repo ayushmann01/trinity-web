@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import commanLogo from '@/assets/comman-logo.png'
 import { Button } from '@/shared/ui/button'
+import { CommanLogo } from '@/shared/ui/CommanLogo'
 import { WizardStepper } from '@/features/projects/components/WizardStepper'
 import { cn } from '@/shared/lib/utils'
 
@@ -27,7 +27,7 @@ export function ProjectWizardShell({
     <div className="flex h-screen min-h-0 flex-col bg-white text-neutral-900" data-testid="project-wizard">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-neutral-200 bg-white px-6">
         <div className="flex items-center gap-2.5">
-          <img src={commanLogo} alt="Comman" className="h-[22px] w-auto" />
+          <CommanLogo />
           <span className="text-neutral-300" aria-hidden="true">
             |
           </span>
