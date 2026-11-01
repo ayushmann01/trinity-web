@@ -104,6 +104,7 @@ describe('criteriaTree scoring', () => {
     expect(selectionError(rows, yesThenMaybe.attemptedIds, yesThenMaybe.maybeIds)).toBeNull()
     const yesMaybeScore = score(rows, yesThenMaybe.attemptedIds, yesThenMaybe.maybeIds)
     expect(yesMaybeScore.criteria[0]?.points_attempted).toBe(2)
+    expect(yesMaybeScore.criteria[0]?.points_maybe).toBe(2)
 
     const yesClearsSiblingYes = toggleAttemptState(rows, [11], [12], 13, 'YES')
     expect(yesClearsSiblingYes.attemptedIds).toEqual([13])
@@ -229,6 +230,32 @@ describe('criteriaTree scoring', () => {
     const result = score(rows)
     expect(result.criteria.length).toBeGreaterThan(0)
     expect(result.summary.points_available).toBeGreaterThan(0)
+  })
+
+  it('counts BRANCH stretch Maybe as remaining points above Yes', () => {
+    const parking = (result: ReturnType<typeof score>) => {
+      const root = result.criteria.find((node) => node.id === 6400)
+      const band = root?.children.find((node) => node.id === 6401)
+      return { root, band }
+    }
+
+    const both = score(GRIHA_DESIGN_RECORDS, [6402], [6403])
+    expect(parking(both).band).toMatchObject({
+      points_attempted: 2,
+      points_maybe: 2,
+      max_points: 4,
+    })
+    expect(parking(both).root).toMatchObject({
+      points_attempted: 2,
+      points_maybe: 2,
+      max_points: 4,
+    })
+
+    const yesOnly = score(GRIHA_DESIGN_RECORDS, [6402], [])
+    expect(parking(yesOnly).band).toMatchObject({ points_attempted: 2, points_maybe: 0 })
+
+    const maybeOnly = score(GRIHA_DESIGN_RECORDS, [], [6403])
+    expect(parking(maybeOnly).band).toMatchObject({ points_attempted: 0, points_maybe: 4 })
   })
 
   it('scores the design catalog energy meters with 2 points for 4 yes selections', () => {

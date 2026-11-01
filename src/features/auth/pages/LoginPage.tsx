@@ -5,6 +5,7 @@ import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { Button } from '@/shared/ui/button'
 import { Link, useNavigate } from 'react-router-dom'
+import { AuthPageFrame } from '@/features/auth/components/AuthPageFrame'
 import { useLoginMutation } from '@/features/auth/api/authApi'
 import { toast } from 'sonner'
 
@@ -31,7 +32,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-16">
+    <AuthPageFrame>
       <h1 className="text-2xl font-semibold mb-6">Sign in</h1>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
@@ -63,6 +64,6 @@ export function LoginPage() {
           Sign up
         </Link>
       </div>
-    </div>
+    </AuthPageFrame>
   )
 }
