@@ -101,7 +101,7 @@ export function ScorecardSummaryBar({
             data-testid="progress-yes"
           />
           <div
-            className="absolute inset-y-0 bg-amber-400"
+            className="absolute inset-y-0 bg-orange-400"
             style={{ left: `${yesWidth}%`, width: `${maybeWidth}%` }}
             data-testid="progress-maybe"
           />
@@ -120,13 +120,13 @@ export function ScorecardSummaryBar({
           {yesPoints} / {scale} pts
         </p>
         <div className="mt-1 flex items-center justify-end gap-3 text-[11px] text-neutral-500">
-          <span className="inline-flex items-center gap-1">
+          <span className="inline-flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
-            Yes: {yesPoints} pts
+            Yes {yesPoints} pts
           </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-            Maybe: {maybePoints} pts
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />
+            Maybe {maybePoints} pts
           </span>
         </div>
       </div>

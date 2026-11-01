@@ -1,15 +1,24 @@
 import type { CriteriaNode } from '@/features/scorecard/types'
 import { countThresholds, criteriaLabel } from '@/features/scorecard/lib/criteriaTree'
 
-export function displayCode(criteriaId: string | null | undefined, depth: number): string {
+function strippedCode(criteriaId: string | null | undefined): string {
   if (!criteriaId?.trim()) return ''
-  const raw = criteriaId.trim()
-  const stripped = raw.replace(/^P-?/i, '')
+  return criteriaId.trim().replace(/^P-?/i, '')
+}
+
+export function displayCode(criteriaId: string | null | undefined, depth: number): string {
+  const stripped = strippedCode(criteriaId)
+  if (!stripped) return ''
   if (depth <= 0) {
     if (/^\d+$/.test(stripped) && Number(stripped) >= 10) return stripped
     return `P${stripped}`
   }
   return `P-${stripped}`
+}
+
+export function chipCode(criteriaId: string | null | undefined): string {
+  const stripped = strippedCode(criteriaId)
+  return stripped ? `P-${stripped}` : ''
 }
 
 export function displayTitle(node: Pick<CriteriaNode, 'criteria_id' | 'title' | 'description' | 'id'>): string {
@@ -35,11 +44,9 @@ export function calculatorCopy(node: CriteriaNode): string | null {
   return parts.join(' & ')
 }
 
-export function checklistInstruction(node: CriteriaNode): string {
-  if (node.criteria_state === 'BRANCH') {
-    return 'select the criteria with against benchmarks and ? for unsure goal'
-  }
-  return 'select the criteria which applies to your project and ? for unsure goal'
+export function checklistInstruction(_node: CriteriaNode): string {
+  void _node
+  return 'select the criteria with highest benchmark and ? for stretch goal'
 }
 
 export function isChecklistParent(node: CriteriaNode): boolean {

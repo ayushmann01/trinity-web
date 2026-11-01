@@ -301,7 +301,7 @@ export const GRIHA_DESIGN_CATALOG: CatalogDraft[] = [
   },
   {
     id: 6600,
-    criteria_id: '6',
+    criteria_id: '5',
     title: 'Propagating Passive Design Strategies',
     description:
       'Implement Passive Design Strategies to reduce the consumption of energy, water and finite resources.',
@@ -311,10 +311,10 @@ export const GRIHA_DESIGN_CATALOG: CatalogDraft[] = [
     children: [
       {
         id: 6601,
-        criteria_id: '6.1',
+        criteria_id: '5',
         title: 'Passive design strategies implemented',
         description:
-          'Use more than 2 strategies, shading, orientation of fenestration, solar chimneys, water bodies, landscape, landscaped mounds, variety of planting, evaporative cooling, wind towers, geothermal, earth berms and ventilated wall cavities while locating green buildings.\nUse passive design strategies as listed to reach passive energy modeling. Implement at the project and demonstrate to the extent. (1 - 4 points)',
+          'Use more than 2 strategies, shading, orientation of fenestration, solar chimneys, water bodies, landscape, landscaped mounds, variety of planting, evaporative cooling, wind towers, geothermal, earth berms and ventilated wall cavities while locating green buildings.\nUse passive design strategies as listed to reach passive energy modeling. Implement at the project and demonstrate to the extent. (1 - 5 points)',
         section: ENERGY,
         max_points: 2,
         criteria_status: 'MANDATORY',
@@ -349,6 +349,14 @@ export const GRIHA_DESIGN_CATALOG: CatalogDraft[] = [
             id: 6605,
             title: '4 strategies',
             max_points: 4,
+            criteria_state: 'NODE',
+            criteria_status: 'BINARY',
+            section: ENERGY,
+          },
+          {
+            id: 6606,
+            title: '5 strategies',
+            max_points: 5,
             criteria_state: 'NODE',
             criteria_status: 'BINARY',
             section: ENERGY,
