@@ -39,8 +39,10 @@ export function toggleAttemptState(
         for (const sibling of children.get(parent.id) ?? []) {
           if (sibling.id === current.id) continue
           for (const id of collectSubtreeIds(sibling.id, children)) {
-            yes.delete(id)
-            maybe.delete(id)
+            // Highest-benchmark bands: Yes and Maybe are exclusive within their
+            // own state only, so a stretch Maybe can sit on a different sibling.
+            if (next === 'YES') yes.delete(id)
+            else maybe.delete(id)
           }
         }
       }
