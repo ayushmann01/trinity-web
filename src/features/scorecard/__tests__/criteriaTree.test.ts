@@ -91,11 +91,31 @@ describe('criteriaTree scoring', () => {
 
     expect(score(rows, [12]).criteria[0]?.points_attempted).toBe(4)
     expect(selectionError(rows, [11, 12])).toMatch(/Select only one option/)
+    expect(selectionError(rows, [], [11, 12])).toMatch(/Select only one option/)
 
     const switched = toggleAttemptState(rows, [11], [], 12, 'YES')
     expect(switched.attemptedIds).toEqual([12])
     expect(selectionError(rows, switched.attemptedIds)).toBeNull()
     expect(score(rows, switched.attemptedIds).criteria[0]?.points_attempted).toBe(4)
+
+    const yesThenMaybe = toggleAttemptState(rows, [11], [], 12, 'MAYBE')
+    expect(yesThenMaybe.attemptedIds).toEqual([11])
+    expect(yesThenMaybe.maybeIds).toEqual([12])
+    expect(selectionError(rows, yesThenMaybe.attemptedIds, yesThenMaybe.maybeIds)).toBeNull()
+    const yesMaybeScore = score(rows, yesThenMaybe.attemptedIds, yesThenMaybe.maybeIds)
+    expect(yesMaybeScore.criteria[0]?.points_attempted).toBe(2)
+
+    const yesClearsSiblingYes = toggleAttemptState(rows, [11], [12], 13, 'YES')
+    expect(yesClearsSiblingYes.attemptedIds).toEqual([13])
+    expect(yesClearsSiblingYes.maybeIds).toEqual([12])
+
+    const maybeClearsSiblingMaybe = toggleAttemptState(rows, [11], [12], 13, 'MAYBE')
+    expect(maybeClearsSiblingMaybe.attemptedIds).toEqual([11])
+    expect(maybeClearsSiblingMaybe.maybeIds).toEqual([13])
+
+    const toggledOff = toggleAttemptState(rows, [11], [12], 11, 'NO')
+    expect(toggledOff.attemptedIds).toEqual([])
+    expect(toggledOff.maybeIds).toEqual([12])
   })
 
   it('scores SUB_ROOT by selection count thresholds including maybe remainder', () => {

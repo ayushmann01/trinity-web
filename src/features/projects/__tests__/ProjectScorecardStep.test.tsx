@@ -89,7 +89,8 @@ describe('ProjectScorecardStep', () => {
     await user.click(fourStrategies.querySelector('button[aria-label="Mark yes"]') as HTMLButtonElement)
     await waitFor(() => {
       expect(store.getState().projectDraft.scorecard.attemptedIds).toContain(6605)
-      expect(store.getState().projectDraft.scorecard.maybeIds).not.toContain(6603)
+      expect(store.getState().projectDraft.scorecard.maybeIds).toContain(6603)
+      expect(store.getState().projectDraft.scorecard.attemptedIds).not.toContain(6603)
     })
   })
 

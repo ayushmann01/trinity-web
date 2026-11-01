@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
 import { useGetProjectQuery } from '@/features/projects/api/projectsApi'
+import { projectTargetLabel } from '@/features/projects/lib/normalizeProject'
 import {
   useCreateStakeholderMutation,
   useListStakeholderBucketsQuery,
@@ -42,7 +43,8 @@ export function ProjectDetailPage() {
         <div>
           <h1 className="text-xl font-semibold">{project?.name}</h1>
           <div className="text-sm text-muted-foreground">
-            Certification: {project?.certificationId} • Target: {project?.targetPoints ?? '-'}
+            Certification: {project?.certificationId} • Target:{' '}
+            {project ? projectTargetLabel(project) : '-'}
           </div>
         </div>
         <div className="flex gap-2">

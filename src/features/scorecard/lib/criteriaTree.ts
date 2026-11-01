@@ -236,8 +236,9 @@ export function selectionError(
 
   for (const parent of rows) {
     if (normalizeCriteriaState(parent.criteria_state) !== 'BRANCH') continue
-    const active = activeBranchChildren(parent, children, userAttempts)
-    if (active.length > 1) {
+    const yesChildren = activeBranchChildren(parent, children, attempted)
+    const maybeChildren = activeBranchChildren(parent, children, maybe)
+    if (yesChildren.length > 1 || maybeChildren.length > 1) {
       return `Select only one option under ${criteriaLabel(parent)}`
     }
   }
