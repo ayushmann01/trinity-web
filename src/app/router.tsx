@@ -11,6 +11,7 @@ import { ProjectDetailPage } from '@/features/projects/pages/ProjectDetailPage'
 import { NewProjectPage } from '@/features/projects/pages/NewProjectPage'
 import { EligibilityPlaceholderPage } from '@/features/projects/pages/EligibilityPlaceholderPage'
 import { ScorecardPage } from '@/features/scorecard/pages/ScorecardPage'
+import { ReviewPreviewPage } from '@/features/review/pages/ReviewPreviewPage'
 
 export const router = createBrowserRouter([
   {
@@ -34,6 +35,8 @@ export const router = createBrowserRouter([
       { path: 'eligibility', element: <EligibilityPlaceholderPage /> },
     ],
   },
+  // Dev-only preview routes (no auth). Safe to keep; hidden from navigation.
+  { path: '/preview/review', element: <ReviewPreviewPage /> },
   {
     path: '/app',
     element: <ProtectedRoute />,
