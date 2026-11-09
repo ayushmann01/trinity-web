@@ -227,12 +227,12 @@ describe('NewProjectPage', () => {
     expect(screen.getByText('Projects list')).toBeInTheDocument()
   })
 
-  it('opens later wizard steps as placeholders', async () => {
+  it('opens the Review step from the stepper', async () => {
     const user = userEvent.setup()
     renderNewProjectPage()
     await user.click(screen.getByTestId('wizard-step-5'))
-    expect(await screen.findByRole('heading', { name: 'Review' })).toBeInTheDocument()
-    expect(screen.getByText('This step will be available in a later release.')).toBeInTheDocument()
+    expect(await screen.findByTestId('review-step')).toBeInTheDocument()
+    expect(screen.getByText('Step 5 of 6')).toBeInTheDocument()
   })
 
   it('reaches the timeline step from the scorecard next button', async () => {
@@ -368,7 +368,7 @@ describe('NewProjectPage', () => {
     expect(screen.getByText('20 Jan 2027')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /next: review/i }))
-    expect(await screen.findByRole('heading', { name: 'Review' })).toBeInTheDocument()
+    expect(await screen.findByTestId('review-step')).toBeInTheDocument()
     expect(remounted.store.getState().projectDraft.currentStep).toBe(5)
     expect(remounted.store.getState().projectDraft.project.startDate).toBe('2027-01-20')
   })
@@ -413,12 +413,12 @@ describe('NewProjectPage', () => {
     expect(screen.queryByTestId('gantt-marker-site-0')).not.toBeInTheDocument()
   })
 
-  it('renders the optional stakeholders step from the review placeholder', async () => {
+  it('renders the optional stakeholders step from the review step', async () => {
     const user = userEvent.setup()
     const { store } = renderNewProjectPage({
       preloadedState: { projectDraft: { currentStep: 5 } },
     })
-    await user.click(screen.getByRole('button', { name: /next: stakeholders/i }))
+    await user.click(screen.getByTestId('review-next'))
     expect(await screen.findByTestId('stakeholders-form')).toBeInTheDocument()
     expect(screen.getByText('Step 6 of 6 · Optional')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Stakeholder Information' })).toBeInTheDocument()
@@ -517,12 +517,12 @@ describe('NewProjectPage', () => {
     })
   })
 
-  it('returns to the review placeholder from the stakeholders back button', async () => {
+  it('returns to the review step from the stakeholders back button', async () => {
     const user = userEvent.setup()
     renderNewProjectPage({
       preloadedState: { projectDraft: { currentStep: 6 } },
     })
     await user.click(screen.getByTestId('stakeholders-back'))
-    expect(await screen.findByRole('heading', { name: 'Review' })).toBeInTheDocument()
+    expect(await screen.findByTestId('review-step')).toBeInTheDocument()
   })
 })

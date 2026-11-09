@@ -13,6 +13,7 @@ import { ProjectStakeholdersForm } from '@/features/projects/components/ProjectS
 import { ProjectScorecardStep } from '@/features/projects/components/ProjectScorecardStep'
 import { WizardPlaceholderStep } from '@/features/projects/components/WizardPlaceholderStep'
 import { PROJECT_SETUP_STEPS } from '@/features/projects/constants'
+import { ReviewResponsibilitiesStep } from '@/features/review/components/ReviewResponsibilitiesStep'
 import {
   emptyProjectProfile,
   projectProfileSchema,
@@ -204,8 +205,8 @@ export function NewProjectPage() {
       onStepChange={(step) => persistDraft(step)}
       onSaveDraft={handleSaveDraft}
       onExit={handleExit}
-      fillHeight={currentStep === 3}
-      contentClassName={currentStep === 4 ? 'max-w-[1100px]' : undefined}
+      fillHeight={currentStep === 3 || currentStep === 5}
+      contentClassName={currentStep === 4 ? 'max-w-[1100px]' : currentStep === 5 ? 'max-w-[1400px]' : undefined}
     >
       {currentStep === 1 ? (
         <form onSubmit={handleProfileNext} noValidate>
@@ -267,12 +268,16 @@ export function NewProjectPage() {
           />
         </form>
       ) : (
-        <WizardPlaceholderStep
-          step={currentStep}
-          onBack={() => persistDraft(Math.max(1, currentStep - 1))}
-          onNext={currentStep < 6 ? () => persistDraft(Math.min(6, currentStep + 1)) : undefined}
-          nextLabel={placeholderNextLabel(currentStep)}
-        />
+        currentStep === 5 ? (
+          <ReviewResponsibilitiesStep onBack={() => persistDraft(4)} onNext={() => persistDraft(6)} />
+        ) : (
+          <WizardPlaceholderStep
+            step={currentStep}
+            onBack={() => persistDraft(Math.max(1, currentStep - 1))}
+            onNext={currentStep < 6 ? () => persistDraft(Math.min(6, currentStep + 1)) : undefined}
+            nextLabel={placeholderNextLabel(currentStep)}
+          />
+        )
       )}
     </ProjectWizardShell>
   )
