@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Storage</title>
+</head>
+<body>
+    <h1>Clearing storage...</h1>
+    <script>
+        localStorage.removeItem('review_board_draft_v2');
+        localStorage.removeItem('review_board_draft_v1');
+        window.location.href = '/preview/review';
+    </script>
+</body>
+</html>

@@ -12,7 +12,8 @@ import type {
   Stakeholder,
 } from '@/features/review/types'
 
-const STORAGE_KEY = 'review_board_draft_v1'
+// Bump version to avoid restoring stale localStorage state from previous drafts
+const STORAGE_KEY = 'review_board_draft_v2'
 
 function uid(): string {
   return Math.random().toString(36).slice(2, 10)
