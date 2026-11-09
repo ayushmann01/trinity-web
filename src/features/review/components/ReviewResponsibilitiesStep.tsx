@@ -10,7 +10,6 @@ import {
   type DragEndEvent,
   type DragStartEvent,
   type DraggableAttributes,
-  type SyntheticListenerMap,
 } from '@dnd-kit/core'
 import {
   SortableContext,
@@ -208,7 +207,7 @@ function DocumentCard({
   onEdit: (values: Partial<Pick<Doc, 'title' | 'type'>>) => void
   onRemove: () => void
   dragAttributes?: DraggableAttributes
-  dragListeners?: SyntheticListenerMap
+  dragListeners?: Record<string, unknown>
   transform?: string
   isOverlay?: boolean
 }) {
@@ -419,70 +418,87 @@ export function ReviewResponsibilitiesStep({ onBack, onNext }: ReviewResponsibil
       </div>
 
       <div className="mt-3 min-h-0 flex-1 overflow-hidden rounded-md border border-neutral-200">
-        <div className="flex min-h-0 flex-1 overflow-x-auto" ref={scrollRef}>
-          {/* sticky left column with phase labels */}
-          <div className="sticky left-0 z-20 w-[260px] shrink-0 border-r border-neutral-200 bg-white">
-            <div className="h-[66px] border-b border-neutral-200" />
-            {board.phases.map((phase) => {
-              const count = phaseCount(board, phase.id)
+        <div className="relative min-h-0 flex-1 overflow-x-auto" ref={scrollRef}>
+          <div
+            className="relative"
+            style={{ minWidth: 260 + 320 * board.stakeholders.length }}
+          >
+            {/* Column tints across full height behind content */}
+            {board.stakeholders.map((s, i) => {
+              const tint =
+                s.color === 'blue'
+                  ? 'bg-blue-50'
+                  : s.color === 'amber'
+                    ? 'bg-amber-50'
+                    : s.color === 'green'
+                      ? 'bg-emerald-50'
+                      : 'bg-rose-50'
               return (
-                <div key={phase.id} className="border-b border-neutral-200">
-                  <button
-                    type="button"
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-neutral-50"
-                    aria-expanded={!phase.collapsed}
-                    onClick={() => setBoard((b) => togglePhase(b, phase.id))}
-                  >
-                    <ChevronUp className={cn('h-4 w-4 transition-transform', phase.collapsed ? 'rotate-180' : '')} />
-                    <span className="rounded-full bg-neutral-900 px-2.5 py-0.5 text-[11px] font-medium text-white">
-                      {phase.label}
-                    </span>
-                    <span className="ml-2 text-[12px] text-neutral-500">{phase.dateRange}</span>
-                    <span className="ml-auto text-[12px] text-neutral-500">{count} items</span>
-                  </button>
-                </div>
+                <div
+                  key={`tint-${s.id}`}
+                  className={cn('absolute top-0 bottom-0', tint)}
+                  style={{ left: 260 + i * 320, width: 320, opacity: 0.55 }}
+                  aria-hidden="true"
+                />
               )
             })}
-          </div>
 
-        {/* scrollable columns */}
-          <div className="min-h-0 flex-1">
-            <div
-              className="grid auto-cols-[320px] grid-flow-col"
-              style={{ minWidth: 320 * board.stakeholders.length }}
-            >
-              {/* column headers */}
-              {board.stakeholders.map((s) => (
-                <div key={s.id} className="border-r border-neutral-200">
-                  <div className="sticky top-0 z-10 border-b border-neutral-200 bg-white p-2">
+            <div className="relative z-10">
+              {/* Header row: empty sticky left cell + stakeholder headers */}
+              <div
+                className="grid border-b border-neutral-200 bg-white"
+                style={{ gridTemplateColumns: `260px repeat(${board.stakeholders.length}, 320px)` }}
+              >
+                <div className="sticky left-0 z-20 h-[66px] border-r border-neutral-200 bg-white" />
+                {board.stakeholders.map((s) => (
+                  <div key={s.id} className="border-r border-neutral-200 p-2">
                     <ColumnHeader stakeholder={s} onSetPoc={onSetPoc} />
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
 
-              {/* rows rendering per phase with cells underneath in their own grid row */}
+              {/* Phase rows: sticky left phase header + row cells aligned under headers */}
               {board.phases.map((phase) => {
+                const count = phaseCount(board, phase.id)
                 return (
                   <div
                     key={phase.id}
-                    className={cn('col-span-full border-b border-neutral-200 bg-white', phase.collapsed && 'opacity-70')}
+                    className={cn('grid border-b border-neutral-200', phase.collapsed && 'opacity-70')}
+                    style={{ gridTemplateColumns: `260px repeat(${board.stakeholders.length}, 320px)` }}
                   >
-                    {!phase.collapsed && (
-                      <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragStart={handleDragStart}
-                        onDragEnd={handleDragEnd}
+                    {/* Sticky left phase header cell */}
+                    <div className="sticky left-0 z-20 border-r border-neutral-200 bg-white">
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-neutral-50"
+                        aria-expanded={!phase.collapsed}
+                        onClick={() => setBoard((b) => togglePhase(b, phase.id))}
                       >
-                        <div
-                          className="grid gap-x-0"
-                          style={{ gridTemplateColumns: `repeat(${board.stakeholders.length}, 320px)` }}
-                        >
-                          {board.stakeholders.map((s) => {
-                            const cell = `${phase.id}:${s.id}` as CellId
-                            const items = board.cells[cell] ?? []
-                            return (
-                              <div key={cell} className="border-r border-neutral-200 p-3">
+                        <ChevronUp
+                          className={cn('h-4 w-4 shrink-0 transition-transform', phase.collapsed ? 'rotate-180' : '')}
+                        />
+                        <span className="shrink-0 rounded-full bg-neutral-900 px-2.5 py-0.5 text-[11px] font-medium text-white">
+                          {phase.label}
+                        </span>
+                        <span className="ml-2 shrink-0 text-[12px] text-neutral-500">{phase.dateRange}</span>
+                        <span className="ml-auto shrink-0 text-[12px] text-neutral-500">{count} items</span>
+                      </button>
+                    </div>
+
+                    {/* Row cells */}
+                    {!phase.collapsed ? (
+                      <>
+                        {board.stakeholders.map((s) => {
+                          const cell = `${phase.id}:${s.id}` as CellId
+                          const items = board.cells[cell] ?? []
+                          return (
+                            <div key={cell} className="border-r border-neutral-200 p-3">
+                              <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragStart={handleDragStart}
+                                onDragEnd={handleDragEnd}
+                              >
                                 <SortableContext items={items.map((d) => d.id)} strategy={rectSortingStrategy}>
                                   <div className="space-y-2" id={`cell-${cell}`}>
                                     {items.map((doc) => (
@@ -497,19 +513,18 @@ export function ReviewResponsibilitiesStep({ onBack, onNext }: ReviewResponsibil
                                     <AddDocumentButton onAdd={(type, title) => handleAdd(cell, type, title)} />
                                   </div>
                                 </SortableContext>
-                              </div>
-                            )
-                          })}
-                        </div>
-                        <DragOverlay>
-                          {active ? (
-                            <DocumentCard doc={active.doc} onEdit={() => {}} onRemove={() => {}} isOverlay />
-                          ) : null}
-                        </DragOverlay>
-                      </DndContext>
-                    )}
-                    {phase.collapsed && (
-                      <div className="p-3 text-[12px] text-neutral-500">Phase collapsed</div>
+                                <DragOverlay>
+                                  {active ? (
+                                    <DocumentCard doc={active.doc} onEdit={() => {}} onRemove={() => {}} isOverlay />
+                                  ) : null}
+                                </DragOverlay>
+                              </DndContext>
+                            </div>
+                          )
+                        })}
+                      </>
+                    ) : (
+                      <div className="col-span-full p-3 text-[12px] text-neutral-500">Phase collapsed</div>
                     )}
                   </div>
                 )
