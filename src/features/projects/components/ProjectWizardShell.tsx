@@ -59,12 +59,12 @@ export function ProjectWizardShell({
       <div className="flex min-h-0 flex-1">
         <aside className="w-[232px] shrink-0 border-r border-neutral-200 bg-neutral-50">
           <WizardStepper currentStep={currentStep} onStepChange={onStepChange} />
-          <div className="px-3">
-            <div className="mt-3 rounded-md border border-neutral-200 bg-white">
-              <div className="border-b border-neutral-200 px-3 py-2">
-                <p className="text-[12px] font-medium text-neutral-700">Summary</p>
+          <div className="px-4">
+            <div className="mt-4 rounded-lg border border-neutral-200 bg-white">
+              <div className="px-3 pt-3">
+                <p className="text-[12px] font-semibold text-neutral-900">Summary</p>
               </div>
-              <div className="space-y-2 px-3 py-3">
+              <div className="space-y-1 px-3 pb-3 pt-2">
                 <p className="text-[12px] text-neutral-700">GRIHA v2019 · target 4 Star</p>
                 <p className="text-[12px] text-neutral-700">Yes 34 pts · Maybe 12 pts</p>
                 <p className="text-[12px] text-neutral-700">Cert deadline 31 Mar 2029</p>
