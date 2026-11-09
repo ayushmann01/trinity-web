@@ -12,8 +12,8 @@ import type {
   Stakeholder,
 } from '@/features/review/types'
 
-// Bump version to avoid restoring stale localStorage state from previous drafts
-const STORAGE_KEY = 'review_board_draft_v2'
+// Bump version whenever the seed shape changes so stale drafts cannot override it
+const STORAGE_KEY = 'review_board_draft_v3'
 
 function uid(): string {
   return Math.random().toString(36).slice(2, 10)
@@ -37,6 +37,8 @@ const STAKEHOLDERS: Stakeholder[] = [
   { id: 'mep', label: 'MEP consultant', color: 'amber' },
   { id: 'gbc', label: 'GBC', color: 'green', you: true, poc: 'You' },
   { id: 'contractor', label: 'Contractor', color: 'rose' },
+  { id: 'landscape', label: 'Landscape consultant', color: 'violet' },
+  { id: 'client', label: 'Client', color: 'sky' },
 ]
 
 function createEmptyCells(): ResponsibilitiesBoard['cells'] {
@@ -80,6 +82,18 @@ export function createInitialBoard(): ResponsibilitiesBoard {
   cells['post-construction:contractor'] = [
     { id: uid(), type: 'Certificate', title: 'Completion certificate' },
   ]
+
+  // Off-screen column seed documents to match design counts (3,5,4,4,4)
+  // Scoping: +1
+  cells['scoping:client'] = [{ id: uid(), type: 'Report', title: 'Site survey brief' }]
+  // Design: +2
+  cells['design:landscape'] = [{ id: uid(), type: 'Drawing', title: 'Planting concept' }]
+  cells['design:client'] = [{ id: uid(), type: 'Report', title: 'Design brief sign-off' }]
+  // Post-Design: +2
+  cells['post-design:landscape'] = [{ id: uid(), type: 'Drawing', title: 'Irrigation layout' }]
+  cells['post-design:client'] = [{ id: uid(), type: 'Report', title: 'Procurement plan' }]
+  // Construction: +1
+  cells['construction:client'] = [{ id: uid(), type: 'Report', title: 'Payment certificate' }]
 
   return {
     phases: PHASES,

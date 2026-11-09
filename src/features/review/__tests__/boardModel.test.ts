@@ -11,10 +11,10 @@ import { describe, expect, it } from 'vitest'
 describe('review board model', () => {
   it('computes item counts per phase', () => {
     const board = createInitialBoard()
-    expect(phaseCount(board, 'scoping')).toBe(2)
-    expect(phaseCount(board, 'design')).toBe(3)
-    expect(phaseCount(board, 'post-design')).toBe(2)
-    expect(phaseCount(board, 'construction')).toBe(3)
+    expect(phaseCount(board, 'scoping')).toBe(3)
+    expect(phaseCount(board, 'design')).toBe(5)
+    expect(phaseCount(board, 'post-design')).toBe(4)
+    expect(phaseCount(board, 'construction')).toBe(4)
     expect(phaseCount(board, 'post-construction')).toBe(4)
   })
 
@@ -27,8 +27,8 @@ describe('review board model', () => {
     expect(board.cells[from].some((d) => d.id === moving.id)).toBe(false)
     expect(board.cells[to][0]?.id).toBe(moving.id)
     // counts changed accordingly
-    expect(phaseCount(board, 'scoping')).toBe(1)
-    expect(phaseCount(board, 'design')).toBe(4)
+    expect(phaseCount(board, 'scoping')).toBe(2)
+    expect(phaseCount(board, 'design')).toBe(6)
   })
 
   it('adds and removes documents', () => {

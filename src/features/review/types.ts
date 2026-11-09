@@ -1,4 +1,4 @@
-export type StakeholderId = 'architect' | 'mep' | 'gbc' | 'contractor'
+export type StakeholderId = 'architect' | 'mep' | 'gbc' | 'contractor' | 'landscape' | 'client'
 
 export type DocumentType =
   | 'Drawing'
@@ -33,11 +33,7 @@ export type Phase = {
 export type Stakeholder = {
   id: StakeholderId
   label: string
-  color:
-    | 'blue'
-    | 'amber'
-    | 'green'
-    | 'rose'
+  color: 'blue' | 'amber' | 'green' | 'rose' | 'violet' | 'sky'
   poc?: string
   you?: boolean
 }
