@@ -9,6 +9,8 @@ import {
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
+  type DraggableAttributes,
+  type SyntheticListenerMap,
 } from '@dnd-kit/core'
 import {
   SortableContext,
@@ -18,7 +20,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { ChevronLeft, ChevronRight, ChevronUp, GripVertical, MoreHorizontal } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/shared/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Select } from '@/shared/ui/select'
@@ -205,8 +207,8 @@ function DocumentCard({
   doc: Doc
   onEdit: (values: Partial<Pick<Doc, 'title' | 'type'>>) => void
   onRemove: () => void
-  dragAttributes?: any
-  dragListeners?: any
+  dragAttributes?: DraggableAttributes
+  dragListeners?: SyntheticListenerMap
   transform?: string
   isOverlay?: boolean
 }) {
@@ -223,8 +225,8 @@ function DocumentCard({
           <button
             aria-label="Drag"
             className="text-neutral-400 hover:text-neutral-600"
-            {...(dragAttributes as any)}
-            {...(dragListeners as any)}
+            {...dragAttributes}
+            {...dragListeners}
           >
             <GripVertical className="h-4 w-4" />
           </button>
@@ -301,11 +303,7 @@ export function ReviewResponsibilitiesStep({ onBack, onNext }: ReviewResponsibil
     saveBoard(board)
   }, [board])
 
-  // Precompute order for stable rendering
-  useMemo(() => {
-    // no-op; dependencies ensure layout recalculates when shape changes
-    return null
-  }, [board.phases, board.stakeholders])
+  // no-op: dependencies ensure layout recalculates when shape changes
 
   function scrollBy(delta: number) {
     const el = scrollRef.current
@@ -476,7 +474,10 @@ export function ReviewResponsibilitiesStep({ onBack, onNext }: ReviewResponsibil
                         onDragStart={handleDragStart}
                         onDragEnd={handleDragEnd}
                       >
-                        <div className="grid grid-cols-[repeat(var(--cols),320px)] gap-x-0" style={{ ['--cols' as any]: board.stakeholders.length }}>
+                        <div
+                          className="grid gap-x-0"
+                          style={{ gridTemplateColumns: `repeat(${board.stakeholders.length}, 320px)` }}
+                        >
                           {board.stakeholders.map((s) => {
                             const cell = `${phase.id}:${s.id}` as CellId
                             const items = board.cells[cell] ?? []
