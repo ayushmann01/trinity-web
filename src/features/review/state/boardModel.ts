@@ -81,30 +81,10 @@ export function createInitialBoard(): ResponsibilitiesBoard {
     { id: uid(), type: 'Certificate', title: 'Completion certificate' },
   ]
 
-  // Initial per-phase counts from the seed above
-  const initialSeedCounts: Record<PhaseId, number> = {
-    'scoping': cells['scoping:architect'].length + cells['scoping:gbc'].length + cells['scoping:mep'].length + cells['scoping:contractor'].length,
-    'design': cells['design:architect'].length + cells['design:gbc'].length + cells['design:mep'].length + cells['design:contractor'].length,
-    'post-design': cells['post-design:architect'].length + cells['post-design:gbc'].length + cells['post-design:mep'].length + cells['post-design:contractor'].length,
-    'construction': cells['construction:architect'].length + cells['construction:gbc'].length + cells['construction:mep'].length + cells['construction:contractor'].length,
-    'post-construction': cells['post-construction:architect'].length + cells['post-construction:gbc'].length + cells['post-construction:mep'].length + cells['post-construction:contractor'].length,
-  }
-
-  // Display counts per the design (while still allowing live deltas)
-  const baseCounts: Partial<Record<PhaseId, number>> = {
-    'scoping': 3,
-    'design': 5,
-    'post-design': 4,
-    'construction': 4,
-    'post-construction': 4,
-  }
-
   return {
     phases: PHASES,
     stakeholders: STAKEHOLDERS,
     cells,
-    baseCounts,
-    initialSeedCounts,
   }
 }
 
@@ -215,11 +195,5 @@ export function phaseCount(board: ResponsibilitiesBoard, phaseId: PhaseId): numb
   return total
 }
 
-export function displayPhaseCount(board: ResponsibilitiesBoard, phaseId: PhaseId): number {
-  const current = phaseCount(board, phaseId)
-  const initial = board.initialSeedCounts?.[phaseId] ?? current
-  const base = board.baseCounts?.[phaseId] ?? current
-  const delta = current - initial
-  return base + delta
-}
+// no displayPhaseCount: counts always reflect actual cards
 

@@ -18,13 +18,12 @@ import {
   useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ChevronLeft, ChevronRight, ChevronUp, GripVertical, MoreHorizontal } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronUp, GripVertical, MoreHorizontal, ArrowLeft, ArrowRight, FileText, List } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/shared/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
-import { Select } from '@/shared/ui/select'
 import { cn } from '@/shared/lib/utils'
-import { addDocument, editDocument, loadBoard, moveDocument, displayPhaseCount, removeDocument, saveBoard, setPoc, togglePhase } from '@/features/review/state/boardModel'
+import { addDocument, editDocument, loadBoard, moveDocument, phaseCount, removeDocument, saveBoard, setPoc, togglePhase } from '@/features/review/state/boardModel'
 import type { CellId, DocumentCard as Doc, DocumentType, ResponsibilitiesBoard, Stakeholder } from '@/features/review/types'
 
 type ReviewResponsibilitiesStepProps = {
@@ -41,12 +40,12 @@ function ColumnHeader({
 }) {
   const colorBg =
     stakeholder.color === 'blue'
-      ? 'bg-blue-50'
+      ? 'bg-blue-100'
       : stakeholder.color === 'amber'
-        ? 'bg-amber-50'
+        ? 'bg-amber-100'
         : stakeholder.color === 'green'
-          ? 'bg-emerald-50'
-          : 'bg-rose-50'
+          ? 'bg-emerald-100'
+          : 'bg-rose-100'
   const dotColor =
     stakeholder.color === 'blue'
       ? 'bg-blue-500'
@@ -55,147 +54,84 @@ function ColumnHeader({
         : stakeholder.color === 'green'
           ? 'bg-emerald-600'
           : 'bg-rose-500'
+  const textColor =
+    stakeholder.color === 'blue'
+      ? 'text-blue-800'
+      : stakeholder.color === 'amber'
+        ? 'text-amber-800'
+        : stakeholder.color === 'green'
+          ? 'text-emerald-800'
+          : 'text-rose-800'
   return (
-    <div className={cn('rounded-md border border-neutral-200 px-2 py-1.5', colorBg)}>
-      <div className="flex items-center gap-2">
-        <span className={cn('h-2 w-2 rounded-full', dotColor)} />
-        <span className="text-[12px] font-medium text-neutral-900">{stakeholder.label}</span>
-        <div className="ml-auto flex items-center gap-1">
-          {stakeholder.you ? (
-            <span className="inline-flex items-center rounded-full border border-neutral-300 bg-white px-1.5 py-0.5 text-[11px] text-neutral-700">
-              <span className="mr-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-neutral-800 text-[10px] text-white">
-                Y
-              </span>
-              You
+    <div className="flex items-center justify-between rounded-md px-2 py-1.5">
+      <div className={cn('inline-flex items-center gap-2 rounded-full px-2 py-0.5', colorBg)}>
+        <span className={cn('h-2 w-2 rounded-full', dotColor)}></span>
+        <span className={cn('text-[12px] font-medium', textColor)}>{stakeholder.label}</span>
+      </div>
+      <div className="ml-2 flex items-center gap-1">
+        {stakeholder.you ? (
+          <span className="inline-flex items-center rounded-full border border-neutral-300 bg-white px-1.5 py-0.5 text-[11px] text-neutral-700">
+            <span className="mr-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-neutral-800 text-[10px] text-white">
+              Y
             </span>
-          ) : null}
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                aria-label="Assign POC"
-                className="inline-flex items-center gap-0.5 rounded-md px-1 py-0.5 text-[11px] text-neutral-700 hover:bg-neutral-100"
-              >
-                {stakeholder.poc ? `POC: ${stakeholder.poc}` : '+ Assign POC'}
-                <svg viewBox="0 0 20 20" className="h-3 w-3 text-neutral-500" aria-hidden="true">
-                  <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-                </svg>
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-56 p-3">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  const fd = new FormData(e.currentTarget as HTMLFormElement)
-                  const name = String(fd.get('poc') || '')
-                  onSetPoc(stakeholder.id, name || undefined)
-                }}
-                className="space-y-2"
-              >
-                <input
-                  type="text"
-                  name="poc"
-                  defaultValue={stakeholder.poc && stakeholder.poc !== 'You' ? stakeholder.poc : ''}
-                  placeholder="Enter name"
-                  className="h-8 w-full rounded border border-neutral-300 px-2 text-[13px] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-800"
-                />
-                <div className="flex justify-between">
+            You
+          </span>
+        ) : null}
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              aria-label="Assign POC"
+              className="inline-flex items-center gap-0.5 rounded-md px-1 py-0.5 text-[11px] text-neutral-700 hover:bg-neutral-100"
+            >
+              {stakeholder.poc ? 'You' : '+ Assign POC'}
+              <svg viewBox="0 0 20 20" className="h-3 w-3 text-neutral-500" aria-hidden="true">
+                <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+              </svg>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56 p-3">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                const fd = new FormData(e.currentTarget as HTMLFormElement)
+                const name = String(fd.get('poc') || '')
+                onSetPoc(stakeholder.id, name || undefined)
+              }}
+              className="space-y-2"
+            >
+              <input
+                type="text"
+                name="poc"
+                defaultValue={stakeholder.poc && stakeholder.poc !== 'You' ? stakeholder.poc : ''}
+                placeholder="Enter name"
+                className="h-8 w-full rounded border border-neutral-300 px-2 text-[13px] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-800"
+              />
+              <div className="flex justify-between">
+                <Button type="submit" size="sm" className="h-8 bg-neutral-900 px-3 text-[12px] text-white hover:bg-neutral-800">
+                  Save
+                </Button>
+                {stakeholder.poc ? (
                   <Button
-                    type="submit"
+                    type="button"
+                    variant="outline"
                     size="sm"
-                    className="h-8 bg-neutral-900 px-3 text-[12px] text-white hover:bg-neutral-800"
+                    className="h-8 border-neutral-200 text-[12px] text-neutral-800"
+                    onClick={() => onSetPoc(stakeholder.id, undefined)}
                   >
-                    Save
+                    Remove
                   </Button>
-                  {stakeholder.poc ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-8 border-neutral-200 text-[12px] text-neutral-800"
-                      onClick={() => onSetPoc(stakeholder.id, undefined)}
-                    >
-                      Remove
-                    </Button>
-                  ) : null}
-                </div>
-              </form>
-            </PopoverContent>
-          </Popover>
-        </div>
+                ) : null}
+              </div>
+            </form>
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   )
 }
 
-function AddDocumentButton({
-  onAdd,
-}: {
-  onAdd: (type: DocumentType, title: string) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const [title, setTitle] = useState('')
-  const [type, setType] = useState<DocumentType>('Report')
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="flex h-9 w-full items-center justify-center rounded-md border-2 border-dashed border-neutral-300 bg-white text-[12px] text-neutral-600 hover:bg-neutral-50"
-        >
-          + Add document
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80 p-3">
-        <div className="space-y-2">
-          <label className="block text-[12px] text-neutral-600">Type</label>
-          <Select
-            className="wizard-select h-8"
-            value={type}
-            onChange={(e) => setType(e.target.value as DocumentType)}
-          >
-            {['Drawing', 'Report', 'Calculation', 'Invoice', 'Log', 'Certificate'].map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </Select>
-          <label className="mt-2 block text-[12px] text-neutral-600">Title</label>
-          <input
-            className="h-8 w-full rounded border border-neutral-300 px-2 text-[13px] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-800"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter title"
-          />
-          <div className="mt-2 flex justify-end">
-            <Button
-              size="sm"
-              className="h-8 bg-neutral-900 px-3 text-[12px] text-white hover:bg-neutral-800"
-              onClick={() => {
-                if (title.trim().length === 0) return
-                onAdd(type, title.trim())
-                setTitle('')
-                setOpen(false)
-              }}
-            >
-              Add
-            </Button>
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
-  )
-}
-
-function DocumentCard({
-  doc,
-  onEdit,
-  onRemove,
-  dragAttributes,
-  dragListeners,
-  transform,
-  isOverlay,
-}: {
+const DocumentCard = (props: {
   doc: Doc
   onEdit: (values: Partial<Pick<Doc, 'title' | 'type'>>) => void
   onRemove: () => void
@@ -203,23 +139,16 @@ function DocumentCard({
   dragListeners?: Record<string, unknown>
   transform?: string
   isOverlay?: boolean
-}) {
+}) => {
+  const { doc, onEdit, onRemove, dragAttributes, dragListeners, transform, isOverlay } = props
   return (
     <div
-      className={cn(
-        'rounded-md border border-neutral-200 bg-white shadow-sm',
-        isOverlay ? 'opacity-90' : undefined,
-      )}
+      className={cn('group rounded-md border border-neutral-200 bg-white shadow-sm', isOverlay ? 'opacity-90' : undefined)}
       style={transform ? { transform } : undefined}
     >
       <div className="flex items-center justify-between px-2.5 pb-1 pt-2">
         <div className="flex items-center gap-1.5">
-          <button
-            aria-label="Drag"
-            className="text-neutral-400 hover:text-neutral-600"
-            {...dragAttributes}
-            {...dragListeners}
-          >
+          <button aria-label="Drag" className="text-neutral-400 hover:text-neutral-600" {...dragAttributes} {...dragListeners}>
             <GripVertical className="h-4 w-4" />
           </button>
           <span className="text-[11px] text-neutral-500">{doc.type}</span>
@@ -228,23 +157,17 @@ function DocumentCard({
           <PopoverTrigger asChild>
             <button
               aria-label="More"
-              className="rounded p-1 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700"
+              className="rounded p-1 text-neutral-500 opacity-0 hover:bg-neutral-100 hover:text-neutral-700 focus:opacity-100 group-hover:opacity-100"
             >
               <MoreHorizontal className="h-4 w-4" />
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-60 p-2">
             <div className="space-y-2">
-              <button
-                className="w-full rounded px-2 py-1.5 text-left text-[13px] hover:bg-neutral-100"
-                onClick={() => onEdit({ title: doc.title + ' (edited)' })}
-              >
+              <button className="w-full rounded px-2 py-1.5 text-left text-[13px] hover:bg-neutral-100" onClick={() => onEdit({ title: doc.title + ' (edited)' })}>
                 Quick edit title
               </button>
-              <button
-                className="w-full rounded px-2 py-1.5 text-left text-[13px] text-rose-600 hover:bg-rose-50"
-                onClick={onRemove}
-              >
+              <button className="w-full rounded px-2 py-1.5 text-left text-[13px] text-rose-600 hover:bg-rose-50" onClick={onRemove}>
                 Remove
               </button>
             </div>
@@ -380,150 +303,125 @@ export function ReviewResponsibilitiesStep({ onBack, onNext }: ReviewResponsibil
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-[12px] text-neutral-700">
-        <div className="flex items-center gap-6">
-          <span>
+      <div className="mt-4 flex items-center justify-between">
+        <div className="rounded-md border-2 border-dashed border-neutral-200 bg-neutral-50 px-3 py-2 text-[12px] text-neutral-700">
+          <span className="mr-6">
             <strong>Click a column header</strong> to add / remove a POC
           </span>
-          <span>
+          <span className="mr-6">
             <strong>+ Add document</strong> adds a project-specific document
           </span>
           <span>
             <strong>Drag</strong> an item to reassign
           </span>
         </div>
-        <div className="flex items-center gap-1">
-          <button
-            aria-label="Scroll left"
-            className="rounded border border-neutral-200 p-1 text-neutral-700 hover:bg-neutral-100"
-            onClick={() => scrollBy(-320)}
-          >
-            <ChevronLeft className="h-4 w-4" />
+        <div className="ml-2 flex items-center gap-1">
+          <button aria-label="Scroll left" className="h-8 w-8 rounded-md border border-neutral-200 text-neutral-700 hover:bg-neutral-100" onClick={() => scrollBy(-320)}>
+            <ChevronLeft className="mx-auto h-4 w-4" />
           </button>
-          <button
-            aria-label="Scroll right"
-            className="rounded border border-neutral-200 p-1 text-neutral-700 hover:bg-neutral-100"
-            onClick={() => scrollBy(320)}
-          >
-            <ChevronRight className="h-4 w-4" />
+          <button aria-label="Scroll right" className="h-8 w-8 rounded-md border border-neutral-200 text-neutral-700 hover:bg-neutral-100" onClick={() => scrollBy(320)}>
+            <ChevronRight className="mx-auto h-4 w-4" />
           </button>
         </div>
       </div>
 
-      <div className="mt-3 min-h-0 flex-1 overflow-hidden rounded-md border border-neutral-200">
+      {/* View toggle */}
+      <div className="mt-3 flex justify-end">
+        <div className="inline-flex items-center rounded-md border border-neutral-200 bg-neutral-100 p-0.5 shadow-inner">
+          <button className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 text-[12px] shadow" type="button">
+            <FileText className="h-3.5 w-3.5" /> Documents
+          </button>
+          <button className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12px] text-neutral-600" type="button">
+            <List className="h-3.5 w-3.5" /> Criteria
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-3 min-h-0 flex-1 overflow-hidden">
         <div className="relative min-h-0 flex-1 overflow-x-auto" ref={scrollRef}>
-          <div
-            className="relative"
-            style={{ minWidth: 260 + 320 * board.stakeholders.length }}
-          >
-            {/* Column tints across full height behind content */}
-            {board.stakeholders.map((s, i) => {
-              const tint =
-                s.color === 'blue'
-                  ? 'bg-blue-50'
-                  : s.color === 'amber'
-                    ? 'bg-amber-50'
-                    : s.color === 'green'
-                      ? 'bg-emerald-50'
-                      : 'bg-rose-50'
+          <div className="relative" style={{ minWidth: 320 * board.stakeholders.length }}>
+            {/* Column headers bar */}
+            <div className="flex items-center gap-3 rounded-md bg-neutral-50 p-2">
+              {board.stakeholders.map((s) => (
+                <div key={s.id} className="w-[320px]">
+                  <ColumnHeader stakeholder={s} onSetPoc={onSetPoc} />
+                </div>
+              ))}
+            </div>
+
+            {/* Phases */}
+            {board.phases.map((phase) => {
+              const count = phaseCount(board, phase.id)
               return (
-                <div
-                  key={`tint-${s.id}`}
-                  className={cn('absolute top-0 bottom-0', tint)}
-                  style={{ left: 260 + i * 320, width: 320, opacity: 0.55 }}
-                  aria-hidden="true"
-                />
-              )
-            })}
-
-            <div className="relative z-10">
-              {/* Header row: empty sticky left cell + stakeholder headers */}
-              <div
-                className="grid border-b border-neutral-200 bg-white"
-                style={{ gridTemplateColumns: `260px repeat(${board.stakeholders.length}, 320px)` }}
-              >
-                <div className="sticky left-0 z-20 h-[66px] border-r border-neutral-200 bg-white" />
-                {board.stakeholders.map((s) => (
-                  <div key={s.id} className="border-r border-neutral-200 p-2">
-                    <ColumnHeader stakeholder={s} onSetPoc={onSetPoc} />
-                  </div>
-                ))}
-              </div>
-
-              {/* Phase rows: sticky left phase header + row cells aligned under headers */}
-              {board.phases.map((phase) => {
-                return (
-                  <div
-                    key={phase.id}
-                    className={cn('grid border-b border-neutral-200', phase.collapsed && 'opacity-70')}
-                    style={{ gridTemplateColumns: `260px repeat(${board.stakeholders.length}, 320px)` }}
+                <div key={phase.id} className="mt-3">
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 px-1.5 text-left"
+                    aria-expanded={!phase.collapsed}
+                    onClick={() => setBoard((b) => togglePhase(b, phase.id))}
                   >
-                    {/* Sticky left phase header cell */}
-                    <div className="sticky left-0 z-20 border-r border-neutral-200 bg-white">
-                      <button
-                        type="button"
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-neutral-50"
-                        aria-expanded={!phase.collapsed}
-                        onClick={() => setBoard((b) => togglePhase(b, phase.id))}
-                      >
-                        <ChevronUp
-                          className={cn('h-4 w-4 shrink-0 transition-transform', phase.collapsed ? 'rotate-180' : '')}
-                        />
-                        <span className="shrink-0 rounded-full bg-neutral-900 px-2.5 py-0.5 text-[11px] font-medium text-white">
-                          {phase.label}
-                        </span>
-                        <span className="ml-2 min-w-0 flex-1 truncate text-[12px] text-neutral-500">{phase.dateRange}</span>
-                        <span className="ml-2 shrink-0 text-[12px] text-neutral-500">
-                          {displayPhaseCount(board, phase.id)} items
-                        </span>
-                      </button>
-                    </div>
+                    <ChevronUp className={cn('h-4 w-4 shrink-0 transition-transform', phase.collapsed ? 'rotate-180' : '')} />
+                    <span className="shrink-0 rounded-full bg-neutral-900 px-2.5 py-0.5 text-[11px] font-medium text-white">
+                      {phase.label}
+                    </span>
+                    <span className="ml-2 text-[12px] text-neutral-500">{phase.dateRange}</span>
+                    <span className="mx-1 text-[12px] text-neutral-400">·</span>
+                    <span className="text-[12px] text-neutral-500">{count} items</span>
+                  </button>
 
-                    {/* Row cells */}
-                    {!phase.collapsed ? (
-                      <>
+                  {!phase.collapsed ? (
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                      <div className="mt-2 grid grid-cols-[repeat(var(--cols),320px)] gap-3" style={{ ['--cols' as any]: board.stakeholders.length }}>
                         {board.stakeholders.map((s) => {
                           const cell = `${phase.id}:${s.id}` as CellId
                           const items = board.cells[cell] ?? []
+                          const tint =
+                            s.color === 'blue'
+                              ? 'bg-blue-50 border-blue-100'
+                              : s.color === 'amber'
+                                ? 'bg-amber-50 border-amber-100'
+                                : s.color === 'green'
+                                  ? 'bg-emerald-50 border-emerald-100'
+                                  : 'bg-rose-50 border-rose-100'
+                          const dash =
+                            s.color === 'blue'
+                              ? 'border-blue-200'
+                              : s.color === 'amber'
+                                ? 'border-amber-200'
+                                : s.color === 'green'
+                                  ? 'border-emerald-200'
+                                  : 'border-rose-200'
                           return (
-                            <div key={cell} className="border-r border-neutral-200 p-3">
-                              <DndContext
-                                sensors={sensors}
-                                collisionDetection={closestCenter}
-                                onDragStart={handleDragStart}
-                                onDragEnd={handleDragEnd}
-                              >
-                                <SortableContext items={items.map((d) => d.id)} strategy={rectSortingStrategy}>
-                                  <div className="space-y-2" id={`cell-${cell}`}>
-                                    {items.map((doc) => (
-                                      <SortableDocument
-                                        key={doc.id}
-                                        id={doc.id}
-                                        doc={doc}
-                                        onEdit={(vals) => handleEdit(cell, doc.id, vals)}
-                                        onRemove={() => handleRemove(cell, doc.id)}
-                                      />
-                                    ))}
-                                    <AddDocumentButton onAdd={(type, title) => handleAdd(cell, type, title)} />
+                            <div key={cell} className={cn('h-full rounded-md border p-3', tint)}>
+                              <SortableContext items={items.map((d) => d.id)} strategy={rectSortingStrategy}>
+                                <div className="space-y-2" id={`cell-${cell}`}>
+                                  {items.map((doc) => (
+                                    <SortableDocument key={doc.id} id={doc.id} doc={doc} onEdit={(vals) => handleEdit(cell, doc.id, vals)} onRemove={() => handleRemove(cell, doc.id)} />
+                                  ))}
+                                  <div className={cn('flex items-center gap-2 rounded-md border-2 border-dashed bg-white px-2 py-2 text-[12px] text-neutral-600', dash)}>
+                                    <button
+                                      type="button"
+                                      className="inline-flex items-center gap-1"
+                                      onClick={() => {
+                                        // open popover-like inline add quickly
+                                        handleAdd(cell, 'Report', 'New document')
+                                      }}
+                                    >
+                                      <span className="text-neutral-500">+</span> Add document
+                                    </button>
                                   </div>
-                                </SortableContext>
-                                <DragOverlay>
-                                  {active ? (
-                                    <DocumentCard doc={active.doc} onEdit={() => {}} onRemove={() => {}} isOverlay />
-                                  ) : null}
-                                </DragOverlay>
-                              </DndContext>
+                                </div>
+                              </SortableContext>
                             </div>
                           )
                         })}
-                      </>
-                    ) : (
-                      <div className="col-span-full p-3 text-[12px] text-neutral-500">Phase collapsed</div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
+                      </div>
+                      <DragOverlay>{active ? <DocumentCard doc={active.doc} onEdit={() => {}} onRemove={() => {}} isOverlay /> : null}</DragOverlay>
+                    </DndContext>
+                  ) : null}
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>
@@ -536,7 +434,7 @@ export function ReviewResponsibilitiesStep({ onBack, onNext }: ReviewResponsibil
           onClick={onBack}
           data-testid="review-back"
         >
-          ← Back
+          <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
         </Button>
         <Button
           type="button"
@@ -544,7 +442,7 @@ export function ReviewResponsibilitiesStep({ onBack, onNext }: ReviewResponsibil
           onClick={onNext}
           data-testid="review-next"
         >
-          Next: Add stakeholders →
+          Next: Add stakeholders <ArrowRight className="ml-1.5 h-4 w-4" />
         </Button>
       </div>
     </div>
