@@ -498,7 +498,7 @@ export function ReviewResponsibilitiesStep({ onBack, onNext }: ReviewResponsibil
   return (
     <div className="flex min-h-0 flex-1 flex-col" data-testid="review-step">
       <div className="flex items-start justify-between gap-6">
-        <div className="min-w-0 max-w-[560px]">
+            <div className="min-w-0 max-w-[42rem]">
           <p className="text-[12px] text-neutral-400">Step 5 of 6</p>
           <h1 className="mt-1 text-[22px] font-semibold tracking-tight text-neutral-900">Review responsibilities</h1>
           <p className="mt-1 text-[13px] leading-5 text-neutral-500">
@@ -597,7 +597,7 @@ export function ReviewResponsibilitiesStep({ onBack, onNext }: ReviewResponsibil
                     <section key={phase.id} className="mt-3">
                       <button
                         type="button"
-                        className="flex items-center gap-2 text-left"
+                        className="sticky left-0 z-10 flex items-center gap-2 bg-white py-0.5 pr-4 text-left"
                         aria-expanded={!phase.collapsed}
                         onClick={() => setBoard((current) => togglePhase(current, phase.id))}
                       >
