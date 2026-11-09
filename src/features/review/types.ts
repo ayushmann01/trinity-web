@@ -47,6 +47,10 @@ export type ResponsibilitiesBoard = {
   stakeholders: Stakeholder[]
   // key is `${phaseId}:${stakeholderId}`
   cells: Record<CellId, DocumentCard[]>
+  // Optional display count baseline per phase (to reflect design counts)
+  baseCounts?: Partial<Record<PhaseId, number>>
+  // Initial seed counts to compute deltas
+  initialSeedCounts?: Record<PhaseId, number>
 }
 
 export type MovePayload = {

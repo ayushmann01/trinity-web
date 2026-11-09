@@ -24,17 +24,7 @@ import { Button } from '@/shared/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Select } from '@/shared/ui/select'
 import { cn } from '@/shared/lib/utils'
-import {
-  addDocument,
-  editDocument,
-  loadBoard,
-  moveDocument,
-  phaseCount,
-  removeDocument,
-  saveBoard,
-  setPoc,
-  togglePhase,
-} from '@/features/review/state/boardModel'
+import { addDocument, editDocument, loadBoard, moveDocument, displayPhaseCount, removeDocument, saveBoard, setPoc, togglePhase } from '@/features/review/state/boardModel'
 import type { CellId, DocumentCard as Doc, DocumentType, ResponsibilitiesBoard, Stakeholder } from '@/features/review/types'
 
 type ReviewResponsibilitiesStepProps = {
@@ -84,9 +74,12 @@ function ColumnHeader({
               <button
                 type="button"
                 aria-label="Assign POC"
-                className="rounded-md px-1 py-0.5 text-[11px] text-neutral-700 hover:bg-neutral-100"
+                className="inline-flex items-center gap-0.5 rounded-md px-1 py-0.5 text-[11px] text-neutral-700 hover:bg-neutral-100"
               >
                 {stakeholder.poc ? `POC: ${stakeholder.poc}` : '+ Assign POC'}
+                <svg viewBox="0 0 20 20" className="h-3 w-3 text-neutral-500" aria-hidden="true">
+                  <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+                </svg>
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-56 p-3">
@@ -459,7 +452,6 @@ export function ReviewResponsibilitiesStep({ onBack, onNext }: ReviewResponsibil
 
               {/* Phase rows: sticky left phase header + row cells aligned under headers */}
               {board.phases.map((phase) => {
-                const count = phaseCount(board, phase.id)
                 return (
                   <div
                     key={phase.id}
@@ -480,8 +472,10 @@ export function ReviewResponsibilitiesStep({ onBack, onNext }: ReviewResponsibil
                         <span className="shrink-0 rounded-full bg-neutral-900 px-2.5 py-0.5 text-[11px] font-medium text-white">
                           {phase.label}
                         </span>
-                        <span className="ml-2 shrink-0 text-[12px] text-neutral-500">{phase.dateRange}</span>
-                        <span className="ml-auto shrink-0 text-[12px] text-neutral-500">{count} items</span>
+                        <span className="ml-2 min-w-0 flex-1 truncate text-[12px] text-neutral-500">{phase.dateRange}</span>
+                        <span className="ml-2 shrink-0 text-[12px] text-neutral-500">
+                          {displayPhaseCount(board, phase.id)} items
+                        </span>
                       </button>
                     </div>
 
