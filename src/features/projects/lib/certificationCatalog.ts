@@ -281,3 +281,18 @@ export function resolveCertifications(
 export function certificationDisplayName(cert?: Certification | null): string {
   return cert?.shortName || cert?.name || DEFAULT_CERT_DISPLAY_NAME
 }
+
+/** Wizard scorecard title: API catalog first, never the bundled DEFAULT_CERTIFICATIONS list. */
+export function scorecardCertificationName(
+  catalog: Certification[] | undefined,
+  certificationId?: string | null,
+  fallback?: string | null,
+): string {
+  const selected = catalog?.find((item) => item.id === certificationId)
+  if (selected) return certificationDisplayName(selected)
+  const named = fallback?.trim()
+  if (named) return named
+  const id = certificationId?.trim()
+  if (id) return id
+  return DEFAULT_CERT_DISPLAY_NAME
+}

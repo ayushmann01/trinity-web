@@ -427,6 +427,8 @@ function toNode(
     pr_stakeholder_id: row.pr_stakeholder_id,
     sc_stakeholder_id: row.sc_stakeholder_id,
     tr_stakeholder_id: row.tr_stakeholder_id,
+    certification_stage: row.certification_stage ?? null,
+    calculator_id: row.calculator_id ?? null,
     children: kids,
   }
 }

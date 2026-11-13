@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { materializeCatalog } from '@/features/scorecard/lib/catalogFactory'
 import {
+  applicableCriteria,
   buildScorecard,
   selectionError,
 } from '@/features/scorecard/lib/criteriaTree'
-import { originalScorecardRows } from '@/features/scorecard/lib/loadScorecard'
 import { toggleAttemptState } from '@/features/scorecard/lib/toggleSelection'
+import { flattenCriteriaTree } from '@/features/scorecard/lib/flattenCriteria'
 import { GRIHA_DESIGN_RECORDS } from '@/features/scorecard/data/grihaDesignCatalog'
+import originalScorecard from '@/features/scorecard/data/trinityOriginalScorecard.json'
 
 function score(
   rows: ReturnType<typeof materializeCatalog>,
@@ -225,7 +227,13 @@ describe('criteriaTree scoring', () => {
   })
 
   it('filters the original GRIHA payload by typology and still builds a tree', () => {
-    const rows = originalScorecardRows('new-construction')
+    const rows = applicableCriteria(
+      flattenCriteriaTree(
+        (originalScorecard as unknown as { criteria?: Parameters<typeof flattenCriteriaTree>[0] })
+          .criteria,
+      ),
+      'OFFICE',
+    )
     expect(rows.length).toBeGreaterThan(10)
     const result = score(rows)
     expect(result.criteria.length).toBeGreaterThan(0)
@@ -266,5 +274,22 @@ describe('criteriaTree scoring', () => {
       .flatMap((child) => child.children)
       .find((node) => node.id === 6310)
     expect(meters?.points_attempted).toBe(2)
+  })
+
+  it('passes certification_stage and calculator_id through to scorecard nodes', () => {
+    const rows = materializeCatalog([
+      {
+        id: 90,
+        criteria_id: '9',
+        title: 'Calculator criterion',
+        max_points: 1,
+        criteria_state: 'ROOT',
+      },
+    ])
+    rows[0]!.certification_stage = 'design'
+    rows[0]!.calculator_id = ['C-P09-01']
+    const node = score(rows).criteria[0]
+    expect(node?.certification_stage).toBe('design')
+    expect(node?.calculator_id).toEqual(['C-P09-01'])
   })
 })

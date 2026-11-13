@@ -32,6 +32,12 @@ vi.mock('@/features/stakeholders/api/stakeholdersApi', () => ({
   ],
 }))
 
+vi.mock('@/features/scorecard/api/scorecardApi', () => ({
+  useGetCriteriaCatalogQuery: () => ({ data: { criteria: [] }, isLoading: false, isError: false }),
+  useGetProjectCriteriaQuery: () => ({ data: undefined, isLoading: false, isError: false }),
+  useSaveProjectCriteriaMutation: () => [vi.fn(), { isLoading: false }],
+}))
+
 async function completeStep1(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(/project title/i), 'Harbor Campus')
   await user.type(screen.getByLabelText(/^location/i), 'Mumbai')
@@ -156,7 +162,7 @@ describe('NewProjectPage', () => {
     await user.click(screen.getByRole('button', { name: /continue to griha scorecard/i }))
     expect(await screen.findByTestId('scorecard-step')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Scorecard' })).toBeInTheDocument()
-    expect(screen.getByText(/GRIHA Scorecard/)).toBeInTheDocument()
+    expect(screen.getByText(/griha Scorecard/i)).toBeInTheDocument()
     expect(store.getState().projectDraft.currentStep).toBe(3)
     expect(store.getState().projectDraft.certification).toMatchObject({
       certificationId: 'griha',

@@ -5,6 +5,7 @@ import {
   certificationDisplayName,
   groupCertificationRows,
   resolveCertifications,
+  scorecardCertificationName,
 } from '@/features/projects/lib/certificationCatalog'
 
 const grihaNewBuildings = {
@@ -170,5 +171,14 @@ describe('resolveCertifications', () => {
   it('defaults the display name to GRIHA', () => {
     expect(certificationDisplayName(undefined)).toBe('GRIHA')
     expect(certificationDisplayName(DEFAULT_CERTIFICATIONS[1])).toBe('IGBC')
+  })
+
+  it('resolves the scorecard title from the API catalog, not bundled defaults', () => {
+    const catalog = groupCertificationRows([gems])
+    expect(scorecardCertificationName(catalog, 'C4')).toBe('GEMS')
+    expect(scorecardCertificationName(catalog, 'C1')).toBe('C1')
+    expect(scorecardCertificationName(undefined, 'C4')).toBe('C4')
+    expect(scorecardCertificationName(DEFAULT_CERTIFICATIONS, 'C4')).toBe('C4')
+    expect(scorecardCertificationName(undefined, '', 'IGBC')).toBe('IGBC')
   })
 })
