@@ -32,8 +32,8 @@ function optionsOf(
 }
 
 export function CertificationDetailsForm({ form, onBack }: CertificationDetailsFormProps) {
-  const { data: catalog } = useListCertificationsQuery()
-  const certifications = useMemo(() => resolveCertifications(catalog), [catalog])
+  const { data: catalog, isError } = useListCertificationsQuery()
+  const certifications = useMemo(() => resolveCertifications(catalog, isError), [catalog, isError])
   const certificationId = form.watch('certificationId')
   const selectedFromList = certifications.find((item) => item.id === certificationId)
   const needsDetail = Boolean(

@@ -3,9 +3,17 @@ import type { AreaUnit } from '@/features/projects/constants'
 export type CatalogOption = {
   id: string
   name: string
+  /** Numeric `certification_data.id` used when creating a project. */
+  certificationDataId?: number
 }
 
 export type CertificationTypology = CatalogOption
+
+export type CertificationCategoryOption = CatalogOption
+
+export type CertificationVersionOption = CatalogOption & {
+  categories?: CertificationCategoryOption[]
+}
 
 export type CertificationStage = 'pre-certification' | 'certification'
 
@@ -15,8 +23,8 @@ export type Certification = {
   shortName?: string
   totalPoints?: number
   typologies: CertificationTypology[]
-  versions?: CatalogOption[]
-  categories?: CatalogOption[]
+  versions?: CertificationVersionOption[]
+  categories?: CertificationCategoryOption[]
   ratings?: CatalogOption[]
 }
 

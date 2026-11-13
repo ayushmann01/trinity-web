@@ -1,4 +1,5 @@
 import { baseApi } from '@/shared/api/baseApi'
+import { groupCertificationRows } from '@/features/projects/lib/certificationCatalog'
 import { normalizeProject, normalizeProjectList } from '@/features/projects/lib/normalizeProject'
 import type { Project, Certification } from '@/features/projects/types'
 
@@ -42,12 +43,23 @@ export const projectsApi = baseApi.injectEndpoints({
       ],
     }),
     listCertifications: build.query<Certification[], void>({
-      query: () => ({ url: '/catalog/certifications' }),
+      query: () => ({ url: '/projects/certifications' }),
       providesTags: ['Certifications'],
+      transformResponse: (raw: unknown) => groupCertificationRows(raw),
     }),
     getCertification: build.query<Certification, string>({
-      query: (id) => ({ url: `/catalog/certifications/${id}` }),
+      query: () => ({ url: '/projects/certifications' }),
       providesTags: (_res, _err, id) => [{ type: 'Certifications', id }],
+      transformResponse: (raw: unknown, _meta, id) => {
+        const grouped = groupCertificationRows(raw)
+        return (
+          grouped.find((item) => item.id === id) ?? {
+            id,
+            name: id,
+            typologies: [],
+          }
+        )
+      },
     }),
   }),
 })
