@@ -34,6 +34,11 @@ function asRules(value: unknown): Record<string, number> | null {
   return Object.keys(parsed).length > 0 ? parsed : null
 }
 
+function asCalculatorId(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null
+  return value.filter((item): item is string => typeof item === 'string')
+}
+
 export function recordFromNode(node: NestedCriteria, fallbackParentId?: number): CriteriaRecord {
   const id = asNumber(node.id)
   const parentId = asNumber(node.parent_id, fallbackParentId ?? id)
@@ -55,6 +60,8 @@ export function recordFromNode(node: NestedCriteria, fallbackParentId?: number):
     criteria_state: asNullableString(node.criteria_state),
     footnotes: asNullableString(node.footnotes),
     rules: asRules(node.rules),
+    certification_stage: asNullableString(node.certification_stage),
+    calculator_id: asCalculatorId(node.calculator_id),
   }
 }
 

@@ -38,10 +38,6 @@ import {
 } from '@/features/projects/schemas/projectStakeholders'
 import { persistProjectDraft } from '@/features/projects/state/projectDraftSlice'
 import { mapProjectStakeholdersToApi } from '@/features/projects/lib/mapProjectStakeholders'
-import {
-  DEFAULT_CERTIFICATIONS,
-  certificationDisplayName,
-} from '@/features/projects/lib/certificationCatalog'
 import { useCreateStakeholderMutation } from '@/features/stakeholders/api/stakeholdersApi'
 import type { ProjectScorecardDraft } from '@/features/scorecard/types'
 import { cloneScorecard } from '@/features/projects/schemas/projectScorecard'
@@ -238,9 +234,6 @@ export function NewProjectPage() {
         </form>
       ) : currentStep === 3 ? (
         <ProjectScorecardStep
-          certificationName={certificationDisplayName(
-            DEFAULT_CERTIFICATIONS.find((item) => item.id === certificationDraft.certificationId),
-          )}
           onBack={() => persistDraft(2)}
           onNext={handleScorecardNext}
           onSaveDraft={handleScorecardSave}

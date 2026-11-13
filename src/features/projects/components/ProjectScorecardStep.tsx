@@ -6,8 +6,10 @@ import { useAppDispatch, useAppSelector } from '@/shared/hooks/redux'
 import { persistProjectDraft } from '@/features/projects/state/projectDraftSlice'
 import { cloneScorecard, emptyProjectScorecard } from '@/features/projects/schemas/projectScorecard'
 import { emptyProjectCertification } from '@/features/projects/schemas/projectCertification'
-import { DEFAULT_CERT_DISPLAY_NAME } from '@/features/projects/lib/certificationCatalog'
+import { useListCertificationsQuery } from '@/features/projects/api/projectsApi'
+import { scorecardCertificationName } from '@/features/projects/lib/certificationCatalog'
 import {
+  useGetCriteriaCatalogQuery,
   useGetProjectCriteriaQuery,
   useSaveProjectCriteriaMutation,
 } from '@/features/scorecard/api/scorecardApi'
@@ -24,7 +26,10 @@ import {
   isMandatoryLeaf,
   isPathAllowed,
 } from '@/features/scorecard/lib/criteriaTree'
-import { resolveCriteriaRows } from '@/features/scorecard/lib/loadScorecard'
+import {
+  criteriaCatalogQueryArgs,
+  resolveCriteriaRows,
+} from '@/features/scorecard/lib/mapCriteriaCatalog'
 import { nextAttemptState, toggleAttemptState } from '@/features/scorecard/lib/toggleSelection'
 import {
   CERTIFICATION_SCALE,
@@ -55,21 +60,25 @@ export function ProjectScorecardStep({
   const certification = draft.certification ?? emptyProjectCertification
   const stored = draft.scorecard ?? emptyProjectScorecard
   const projectId = draft.project.id
-  const { data: apiPayload } = useGetProjectCriteriaQuery(
+  const catalogArgs = criteriaCatalogQueryArgs(certification)
+  const skipCatalog = Boolean(projectId) || !catalogArgs
+  const { data: certifications } = useListCertificationsQuery()
+  const catalogQuery = useGetCriteriaCatalogQuery(catalogArgs ?? { certificationId: '', versionId: '' }, {
+    skip: skipCatalog,
+  })
+  const projectQuery = useGetProjectCriteriaQuery(
     { projectId: String(projectId) },
     { skip: !projectId },
   )
   const [saveCriteria] = useSaveProjectCriteriaMutation()
 
-  const rows = useMemo(
-    () =>
-      resolveCriteriaRows({
-        apiPayload,
-        certificationId: certification.certificationId,
-        typologyId: certification.typologyId,
-      }),
-    [apiPayload, certification.certificationId, certification.typologyId],
-  )
+  const activeQuery = projectId ? projectQuery : catalogQuery
+  const apiPayload = activeQuery.data
+  const hasCriteriaRequest = Boolean(projectId) || Boolean(catalogArgs)
+  const isLoading = hasCriteriaRequest ? activeQuery.isLoading : false
+  const isError = hasCriteriaRequest ? activeQuery.isError : false
+
+  const rows = useMemo(() => resolveCriteriaRows(apiPayload), [apiPayload])
 
   const attemptedIds = stored.attemptedIds
   const maybeIds = stored.maybeIds
@@ -78,22 +87,30 @@ export function ProjectScorecardStep({
   const [collapsed, setCollapsed] = useState(false)
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
+  const displayName = scorecardCertificationName(
+    certifications,
+    certification.certificationId,
+    certificationName,
+  )
+
   const targetMin = targetPointsForRating(
     certification.targetRatingId,
     apiPayload?.certification?.min_pts ?? apiPayload?.summary?.target_min_pts ?? 25,
   )
 
+  const projectTypology = certification.typologyId.trim() || null
+
   const scored = useMemo(
     () =>
       buildScorecard({
         rows,
-        projectTypology: null,
+        projectTypology,
         attemptedYesIds: attemptedIds,
         maybeIds,
         targetMinPts: targetMin,
         targetMaxPts: apiPayload?.certification?.max_pts ?? apiPayload?.summary?.target_max_pts ?? 100,
       }),
-    [rows, attemptedIds, maybeIds, targetMin, apiPayload],
+    [rows, projectTypology, attemptedIds, maybeIds, targetMin, apiPayload],
   )
 
   const preferredId =
@@ -128,7 +145,7 @@ export function ProjectScorecardStep({
     const nextNotes = next.notes ?? notes
     const nextScored = buildScorecard({
       rows,
-      projectTypology: null,
+      projectTypology,
       attemptedYesIds: nextAttempted,
       maybeIds: nextMaybe,
       targetMinPts: targetMin,
@@ -192,12 +209,19 @@ export function ProjectScorecardStep({
   }
 
   const leafCounts = countLeaves(scored.criteria, attempts.yes)
+  const treeStatus = isLoading
+    ? 'Loading criteria…'
+    : isError
+      ? 'Could not load criteria for this certification.'
+      : rows.length === 0
+        ? 'No criteria for this certification.'
+        : null
 
   return (
     <div className="flex min-h-0 flex-1 flex-col" data-testid="scorecard-step">
       <h1 className="sr-only">Scorecard</h1>
       <ScorecardSummaryBar
-        certificationName={certificationName || DEFAULT_CERT_DISPLAY_NAME}
+        certificationName={displayName}
         subtitle={SCORECARD_SUBTITLE}
         collapsed={collapsed}
         onToggleCollapsed={() => setCollapsed((value) => !value)}
@@ -216,26 +240,32 @@ export function ProjectScorecardStep({
         />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <div className="shrink-0 px-6 pt-5">
-            {selected ? <SelectedCriterionHeader node={selected} /> : null}
+            {!treeStatus && selected ? <SelectedCriterionHeader node={selected} /> : null}
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-5">
-          <ScorecardTree
-            criteria={scored.criteria}
-            notes={notes}
-            expandedNotes={expandedNotes}
-            onToggle={handleToggle}
-            onNoteChange={handleNoteChange}
-            onToggleNote={(id) => {
-              setExpandedNotes((current) => {
-                const next = new Set(current)
-                if (next.has(id)) next.delete(id)
-                else next.add(id)
-                return next
-              })
-            }}
-            isInactive={isInactive}
-            selectedId={selected?.id ?? null}
-          />
+            {treeStatus ? (
+              <p className="py-8 text-[13px] text-neutral-500" data-testid="scorecard-tree-status">
+                {treeStatus}
+              </p>
+            ) : (
+              <ScorecardTree
+                criteria={scored.criteria}
+                notes={notes}
+                expandedNotes={expandedNotes}
+                onToggle={handleToggle}
+                onNoteChange={handleNoteChange}
+                onToggleNote={(id) => {
+                  setExpandedNotes((current) => {
+                    const next = new Set(current)
+                    if (next.has(id)) next.delete(id)
+                    else next.add(id)
+                    return next
+                  })
+                }}
+                isInactive={isInactive}
+                selectedId={selected?.id ?? null}
+              />
+            )}
           </div>
         </div>
       </div>

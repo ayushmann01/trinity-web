@@ -42,6 +42,8 @@ export type CriteriaRecord = {
   criteria_state: string | null
   footnotes: string | null
   rules: Record<string, number> | null
+  certification_stage?: string | null
+  calculator_id?: string[] | null
 }
 
 export type CriteriaNode = {
@@ -68,6 +70,8 @@ export type CriteriaNode = {
   pr_stakeholder_id: number | null
   sc_stakeholder_id: number | null
   tr_stakeholder_id: number | null
+  certification_stage?: string | null
+  calculator_id?: string[] | null
   children: CriteriaNode[]
 }
 
@@ -87,10 +91,10 @@ export type ScorecardCertificationMeta = {
   certification_title?: string
   certification_version?: string
   certification_category?: string
-  typology?: string
-  certification_target?: string
-  min_pts?: number
-  max_pts?: number
+  typology?: string | null
+  certification_target?: string | null
+  min_pts?: number | null
+  max_pts?: number | null
 }
 
 export type ProjectCriteriaResponse = {
