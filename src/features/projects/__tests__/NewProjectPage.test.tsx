@@ -17,8 +17,8 @@ vi.mock('sonner', () => ({
 }))
 
 vi.mock('@/features/projects/api/projectsApi', () => ({
-  useListCertificationsQuery: () => ({ data: undefined, isLoading: false }),
-  useGetCertificationQuery: () => ({ data: undefined, isLoading: false }),
+  useListCertificationsQuery: () => ({ data: undefined, isLoading: false, isError: true }),
+  useGetCertificationQuery: () => ({ data: undefined, isLoading: false, isError: true }),
 }))
 
 const createStakeholderMock = vi.hoisted(() => vi.fn())
