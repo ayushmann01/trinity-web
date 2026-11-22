@@ -214,6 +214,10 @@ describe('ProjectScorecardStep', () => {
     expect(screen.getByText('Gold 75pts')).toBeInTheDocument()
     expect(screen.getByText('Platinum 90pts')).toBeInTheDocument()
     expect(screen.getByTestId('scorecard-criteria-nav')).toBeInTheDocument()
+    expect(screen.getByTestId('criteria-nav-6600')).toHaveTextContent(
+      '5 Propagating Passive Design Strategies',
+    )
+    expect(screen.getByTestId('criteria-nav-6600')).not.toHaveTextContent('P5')
     expect(screen.getAllByText(/Propagating Passive Design Strategies/).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/Fire and Life Safety in Sustainable Buildings/).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/Energy meters/).length).toBeGreaterThan(0)
@@ -242,6 +246,8 @@ describe('ProjectScorecardStep', () => {
     })
 
     expect(screen.getByText('GEMS Scorecard')).toBeInTheDocument()
+    expect(screen.getByTestId('criteria-nav-9100')).toHaveTextContent('G1 GEMS Campus Planning')
+    expect(screen.queryByText(/PG1/)).not.toBeInTheDocument()
     expect(screen.getAllByText(/GEMS Campus Planning/).length).toBeGreaterThan(0)
     expect(screen.queryByText(/Propagating Passive Design Strategies/)).not.toBeInTheDocument()
     expect(queryState.catalog.lastArgs).toEqual({
@@ -340,7 +346,8 @@ describe('ProjectScorecardStep', () => {
     renderScorecard()
     await user.click(screen.getByTestId('criteria-nav-6600'))
     expect(screen.getByTestId('selected-criterion-header')).toHaveTextContent(
-      'Propagating Passive Design Strategies',
+      '5 Propagating Passive Design Strategies',
     )
+    expect(screen.getByTestId('selected-criterion-header')).not.toHaveTextContent('P5')
   })
 })

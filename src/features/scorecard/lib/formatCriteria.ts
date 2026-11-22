@@ -1,24 +1,14 @@
 import type { CriteriaNode } from '@/features/scorecard/types'
 import { countThresholds, criteriaLabel } from '@/features/scorecard/lib/criteriaTree'
 
-function strippedCode(criteriaId: string | null | undefined): string {
-  if (!criteriaId?.trim()) return ''
-  return criteriaId.trim().replace(/^P-?/i, '')
-}
-
-export function displayCode(criteriaId: string | null | undefined, depth: number): string {
-  const stripped = strippedCode(criteriaId)
-  if (!stripped) return ''
-  if (depth <= 0) {
-    if (/^\d+$/.test(stripped) && Number(stripped) >= 10) return stripped
-    return `P${stripped}`
-  }
-  return `P-${stripped}`
+/** Raw `criteria_id` from the API node — do not invent P1 / P- prefixes. */
+export function displayCode(criteriaId: string | null | undefined, _depth?: number): string {
+  void _depth
+  return criteriaId?.trim() ?? ''
 }
 
 export function chipCode(criteriaId: string | null | undefined): string {
-  const stripped = strippedCode(criteriaId)
-  return stripped ? `P-${stripped}` : ''
+  return displayCode(criteriaId)
 }
 
 export function displayTitle(node: Pick<CriteriaNode, 'criteria_id' | 'title' | 'description' | 'id'>): string {
