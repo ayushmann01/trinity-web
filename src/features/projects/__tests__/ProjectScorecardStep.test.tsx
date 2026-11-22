@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { renderNewProjectPage } from '@/test/utils'
 import { emptyProjectProfile } from '@/features/projects/schemas/projectProfile'
 import { emptyProjectCertification } from '@/features/projects/schemas/projectCertification'
+import { persistProjectDraft } from '@/features/projects/state/projectDraftSlice'
 import { emptyProjectTimeline } from '@/features/projects/schemas/projectTimeline'
 import { buildScorecard } from '@/features/scorecard/lib/criteriaTree'
 import { GRIHA_DESIGN_RECORDS } from '@/features/scorecard/data/grihaDesignCatalog'
@@ -220,18 +221,13 @@ describe('ProjectScorecardStep', () => {
     expect(screen.getByTestId('criteria-nav-6600')).not.toHaveTextContent('P5')
     expect(screen.getAllByText(/Propagating Passive Design Strategies/).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/Fire and Life Safety in Sustainable Buildings/).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/Energy meters/).length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: /back to certification/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /next: timeline/i })).toBeInTheDocument()
     expect(screen.getByText('Save your selections as a draft')).toBeInTheDocument()
 
-    const checklists = screen.getAllByTestId(/checklist-/)
-    expect(checklists.length).toBeGreaterThan(0)
-    for (const list of checklists) {
-      expect(list).toHaveClass('border')
-      expect(list).toHaveClass('border-neutral-200')
-    }
-    expect(screen.getByTestId('criterion-6600')).not.toHaveClass('border')
+    expect(screen.getByTestId('criterion-6200')).not.toHaveClass('border')
+    expect(screen.queryByTestId('criterion-6600')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('criterion-6300')).not.toBeInTheDocument()
     expect(queryState.catalog.lastArgs).toEqual({ certificationId: 'griha', versionId: 'v2019' })
     expect(queryState.project.skip).toBe(true)
   })
@@ -293,9 +289,89 @@ describe('ProjectScorecardStep', () => {
     expect(screen.queryByText(/Propagating Passive Design Strategies/)).not.toBeInTheDocument()
   })
 
+  it('shows only the selected top-level criterion subtree in the right panel', async () => {
+    const user = userEvent.setup()
+    renderScorecard()
+
+    expect(screen.getByTestId('selected-criterion-header')).toHaveTextContent(
+      '2 Fire and Life Safety in Sustainable Buildings',
+    )
+    expect(screen.getByTestId('criterion-6200')).toBeInTheDocument()
+    expect(screen.queryByTestId('criterion-6600')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Energy meters/)).not.toBeInTheDocument()
+    expect(screen.getByTestId('criteria-nav-6300')).toBeInTheDocument()
+    expect(screen.getByTestId('criteria-nav-6600')).toBeInTheDocument()
+
+    await user.click(screen.getByTestId('criteria-nav-6600'))
+    expect(screen.getByTestId('selected-criterion-header')).toHaveTextContent(
+      '5 Propagating Passive Design Strategies',
+    )
+    expect(screen.getByTestId('criterion-6600')).toBeInTheDocument()
+    expect(screen.getByTestId('criterion-6600')).not.toHaveClass('border')
+    expect(screen.queryByTestId('criterion-6200')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Energy meters/)).not.toBeInTheDocument()
+    const checklists = screen.getAllByTestId(/checklist-/)
+    expect(checklists.length).toBeGreaterThan(0)
+    for (const list of checklists) {
+      expect(list).toHaveClass('border')
+      expect(list).toHaveClass('border-neutral-200')
+    }
+
+    await user.click(screen.getByTestId('criteria-nav-6300'))
+    expect(screen.getByTestId('criterion-6300')).toBeInTheDocument()
+    expect(screen.getAllByText(/Energy meters/).length).toBeGreaterThan(0)
+    expect(screen.queryByTestId('criterion-6600')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('criterion-6200')).not.toBeInTheDocument()
+  })
+
+  it('keeps YES/MAYBE attempts when switching left-nav tabs', async () => {
+    const user = userEvent.setup()
+    const { store } = renderScorecard()
+
+    await user.click(screen.getByTestId('criteria-nav-6600'))
+    const twoStrategies = screen.getByTestId('option-6603')
+    await user.click(twoStrategies.querySelector('button[aria-label="Mark yes"]') as HTMLButtonElement)
+    await waitFor(() => {
+      expect(store.getState().projectDraft.scorecard.attemptedIds).toContain(6603)
+    })
+
+    await user.click(screen.getByTestId('criteria-nav-6200'))
+    expect(screen.queryByTestId('option-6603')).not.toBeInTheDocument()
+    expect(store.getState().projectDraft.scorecard.attemptedIds).toContain(6603)
+
+    await user.click(screen.getByTestId('criteria-nav-6600'))
+    expect(screen.getByTestId('option-6603')).toHaveClass('bg-blue-50/70')
+  })
+
+  it('resets the right panel to the first top-level criterion when the catalog changes', async () => {
+    const user = userEvent.setup()
+    const { store } = renderScorecard()
+
+    await user.click(screen.getByTestId('criteria-nav-6600'))
+    expect(screen.getByTestId('criterion-6600')).toBeInTheDocument()
+
+    queryState.catalog.payload = gemsPayload()
+    store.dispatch(
+      persistProjectDraft({
+        certification: {
+          ...emptyProjectCertification,
+          certificationId: 'C4',
+          versionId: 'C4_V1',
+          categoryId: 'C4_V1_D1',
+          typologyId: 'CAMPUS',
+        },
+      }),
+    )
+
+    expect(await screen.findByTestId('criterion-9100')).toBeInTheDocument()
+    expect(screen.queryByTestId('criterion-6600')).not.toBeInTheDocument()
+    expect(screen.getByTestId('selected-criterion-header')).toHaveTextContent('G1 GEMS Campus Planning')
+  })
+
   it('toggles YES and MAYBE on a BRANCH option and persists the draft', async () => {
     const user = userEvent.setup()
     const { store } = renderScorecard()
+    await user.click(screen.getByTestId('criteria-nav-6600'))
 
     const twoStrategies = screen.getByTestId('option-6603')
     await user.click(twoStrategies.querySelector('button[aria-label="Mark yes"]') as HTMLButtonElement)
@@ -323,6 +399,7 @@ describe('ProjectScorecardStep', () => {
   it('stores notes and navigates back and forward', async () => {
     const user = userEvent.setup()
     const { store } = renderScorecard()
+    await user.click(screen.getByTestId('criteria-nav-6600'))
 
     await user.click(screen.getByTestId('notes-toggle-6600'))
     await user.type(screen.getByTestId('note-6600'), 'Need shading study')

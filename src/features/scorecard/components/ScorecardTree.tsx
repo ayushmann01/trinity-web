@@ -27,10 +27,21 @@ type ScorecardTreeProps = {
   selectedId: number | null
 }
 
+/** Right panel: the selected top-level criterion and its descendants only. */
+export function selectedRootCriteria(
+  criteria: CriteriaNode[],
+  selectedId: number | null,
+): CriteriaNode[] {
+  if (criteria.length === 0) return []
+  const match = selectedId == null ? undefined : criteria.find((node) => node.id === selectedId)
+  return [match ?? criteria[0]!]
+}
+
 export function ScorecardTree(props: ScorecardTreeProps) {
+  const visible = selectedRootCriteria(props.criteria, props.selectedId)
   return (
     <div className="space-y-3" data-testid="scorecard-tree">
-      {props.criteria.map((node) => (
+      {visible.map((node) => (
         <CriterionSection key={node.id} node={node} depth={0} {...props} />
       ))}
     </div>
