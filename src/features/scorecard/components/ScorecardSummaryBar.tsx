@@ -30,9 +30,9 @@ export function ScorecardSummaryBar({
   activeThresholdId,
 }: ScorecardSummaryBarProps) {
   const scale = Math.max(totalPoints, 1)
+  const combined = yesPoints + maybePoints
   const yesWidth = Math.min(100, (yesPoints / scale) * 100)
   const maybeWidth = Math.min(100 - yesWidth, (maybePoints / scale) * 100)
-  const combined = yesPoints + maybePoints
 
   return (
     <div
@@ -92,7 +92,7 @@ export function ScorecardSummaryBar({
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={scale}
-          aria-valuenow={yesPoints}
+          aria-valuenow={combined}
           data-testid="scorecard-progress"
         >
           <div
@@ -117,7 +117,7 @@ export function ScorecardSummaryBar({
 
       <div className="w-[140px] shrink-0 text-right">
         <p className="text-[18px] font-semibold tabular-nums text-neutral-900" data-testid="scorecard-total">
-          {yesPoints} / {scale} pts
+          {combined} / {scale} pts
         </p>
         <div className="mt-1 flex items-center justify-end gap-3 text-[11px] text-neutral-500">
           <span className="inline-flex items-center gap-1.5">
