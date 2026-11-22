@@ -344,6 +344,25 @@ describe('ProjectScorecardStep', () => {
     expect(screen.getByTestId('option-6603')).toHaveClass('bg-blue-50/70')
   })
 
+  it('includes maybe points in the scorecard headline total', async () => {
+    const user = userEvent.setup()
+    const { store } = renderScorecard()
+
+    await user.click(screen.getByTestId('criteria-nav-6600'))
+    const twoStrategies = screen.getByTestId('option-6603')
+    await user.click(twoStrategies.querySelector('button[aria-label="Mark maybe"]') as HTMLButtonElement)
+
+    await waitFor(() => {
+      const summary = store.getState().projectDraft.scorecard.summary
+      expect(summary.pointsMaybe).toBeGreaterThan(0)
+      expect(screen.getByTestId('scorecard-total')).toHaveTextContent(
+        `${summary.pointsAttempted + summary.pointsMaybe} / 100 pts`,
+      )
+      expect(screen.getByText(`Yes ${summary.pointsAttempted} pts`)).toBeInTheDocument()
+      expect(screen.getByText(`Maybe ${summary.pointsMaybe} pts`)).toBeInTheDocument()
+    })
+  })
+
   it('resets the right panel to the first top-level criterion when the catalog changes', async () => {
     const user = userEvent.setup()
     const { store } = renderScorecard()
