@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from 'react'
 import { render, type RenderOptions } from '@testing-library/react'
 import { Provider } from 'react-redux'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { createMemoryRouter, MemoryRouter, RouterProvider } from 'react-router-dom'
 import { setupStore, type AppStore, type RootState } from '@/app/store'
 import type { ProjectDraftState } from '@/features/projects/state/projectDraftSlice'
 import { NewProjectPage } from '@/features/projects/pages/NewProjectPage'
@@ -54,12 +54,18 @@ export function renderWithStore(
   return { store, ...render(ui, { wrapper: Wrapper, ...options }) }
 }
 
+function routeFrom(path: string) {
+  const url = new URL(path, 'http://localhost')
+  return { pathname: url.pathname, search: url.search }
+}
+
 export function renderNewProjectPage(
   options: {
     preloadedState?: Omit<Partial<RootState>, 'projectDraft'> & {
       projectDraft?: Partial<ProjectDraftState>
     }
     route?: string
+    fromWizard?: boolean
   } = {},
 ) {
   const store = setupStore({
@@ -70,18 +76,31 @@ export function renderNewProjectPage(
       ...options.preloadedState?.projectDraft,
     },
   })
+  const hasPreloadedDraft = Boolean(options.preloadedState?.projectDraft)
+  const parsed = routeFrom(options.route ?? '/projects/new')
+  const router = createMemoryRouter(
+    [
+      { path: '/projects/new', element: <NewProjectPage /> },
+      { path: '/projects/new/eligibility', element: <div>Eligibility placeholder</div> },
+      { path: '/app/projects', element: <div>Projects list</div> },
+      { path: '/app/projects/:projectId', element: <div>Project detail</div> },
+    ],
+    {
+      initialEntries: [
+        {
+          pathname: parsed.pathname,
+          search: parsed.search,
+          state: options.fromWizard ?? hasPreloadedDraft ? { fromWizard: true } : undefined,
+        },
+      ],
+    },
+  )
 
   const view = render(
     <Provider store={store}>
-      <MemoryRouter initialEntries={[options.route ?? '/projects/new']}>
-        <Routes>
-          <Route path="/projects/new" element={<NewProjectPage />} />
-          <Route path="/projects/new/eligibility" element={<div>Eligibility placeholder</div>} />
-          <Route path="/app/projects" element={<div>Projects list</div>} />
-        </Routes>
-      </MemoryRouter>
+      <RouterProvider router={router} />
     </Provider>,
   )
 
-  return { store, ...view }
+  return { store, router, ...view }
 }

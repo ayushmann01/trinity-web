@@ -1,10 +1,12 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { useListProjectsQuery } from '@/features/projects/api/projectsApi'
 import {
+  isDraftProject,
   projectCertificationLabel,
   projectTargetLabel,
 } from '@/features/projects/lib/normalizeProject'
 import { Button, buttonVariants } from '@/shared/ui/button'
+import { Badge } from '@/shared/ui/badge'
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '@/shared/ui/table'
 
 export function ProjectsListPage() {
@@ -37,29 +39,64 @@ export function ProjectsListPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data?.items?.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell>{p.name}</TableCell>
-                  <TableCell>{projectCertificationLabel(p)}</TableCell>
-                  <TableCell>{projectTargetLabel(p)}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex gap-2 justify-end">
-                      <Link
-                        to={`/app/projects/${p.id}`}
-                        className={buttonVariants({ size: 'sm', variant: 'ghost' })}
-                      >
-                        View
-                      </Link>
-                      <Link
-                        to={`/app/projects/${p.id}/edit`}
-                        className={buttonVariants({ size: 'sm', variant: 'ghost' })}
-                      >
-                        Edit
-                      </Link>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {data?.items?.map((p) => {
+                const draft = isDraftProject(p)
+                const resumeTo = `/projects/new?draft=${encodeURIComponent(p.id)}`
+                return (
+                  <TableRow key={p.id} data-testid={`project-row-${p.id}`}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {draft ? (
+                          <Link to={resumeTo} className="font-medium hover:underline" data-testid={`draft-link-${p.id}`}>
+                            {p.name || 'Untitled project'}
+                          </Link>
+                        ) : (
+                          <span>{p.name}</span>
+                        )}
+                        {draft ? (
+                          <Badge
+                            variant="secondary"
+                            className="border-transparent bg-amber-100 text-[11px] font-semibold text-amber-900"
+                            data-testid={`draft-badge-${p.id}`}
+                          >
+                            Draft
+                          </Badge>
+                        ) : null}
+                      </div>
+                    </TableCell>
+                    <TableCell>{projectCertificationLabel(p) || '—'}</TableCell>
+                    <TableCell>{projectTargetLabel(p)}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-2 justify-end">
+                        {draft ? (
+                          <Link
+                            to={resumeTo}
+                            className={buttonVariants({ size: 'sm', variant: 'ghost' })}
+                            data-testid={`continue-draft-${p.id}`}
+                          >
+                            Continue
+                          </Link>
+                        ) : (
+                          <>
+                            <Link
+                              to={`/app/projects/${p.id}`}
+                              className={buttonVariants({ size: 'sm', variant: 'ghost' })}
+                            >
+                              View
+                            </Link>
+                            <Link
+                              to={`/app/projects/${p.id}/edit`}
+                              className={buttonVariants({ size: 'sm', variant: 'ghost' })}
+                            >
+                              Edit
+                            </Link>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </div>

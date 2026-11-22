@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
-import { toast } from 'sonner'
 import { Button } from '@/shared/ui/button'
 import { useAppDispatch, useAppSelector } from '@/shared/hooks/redux'
 import { persistProjectDraft } from '@/features/projects/state/projectDraftSlice'
@@ -11,7 +10,6 @@ import { scorecardCertificationName } from '@/features/projects/lib/certificatio
 import {
   useGetCriteriaCatalogQuery,
   useGetProjectCriteriaQuery,
-  useSaveProjectCriteriaMutation,
 } from '@/features/scorecard/api/scorecardApi'
 import { ScorecardSummaryBar } from '@/features/scorecard/components/ScorecardSummaryBar'
 import { ScorecardCriteriaNav } from '@/features/scorecard/components/ScorecardCriteriaNav'
@@ -70,8 +68,6 @@ export function ProjectScorecardStep({
     { projectId: String(projectId) },
     { skip: !projectId },
   )
-  const [saveCriteria] = useSaveProjectCriteriaMutation()
-
   const activeQuery = projectId ? projectQuery : catalogQuery
   const apiPayload = activeQuery.data
   const hasCriteriaRequest = Boolean(projectId) || Boolean(catalogArgs)
@@ -191,20 +187,8 @@ export function ProjectScorecardStep({
     setSelectedByCatalog({ key: rootKey, id })
   }
 
-  const handleSave = async () => {
-    const payload = persistScorecard()
-    if (projectId) {
-      try {
-        await saveCriteria({
-          projectId: String(projectId),
-          attemptedIds: payload.attemptedIds,
-          maybeIds: payload.maybeIds,
-        }).unwrap()
-      } catch {
-        toast.error('Could not save scorecard to the server. Draft kept locally.')
-      }
-    }
-    onSaveDraft(payload)
+  const handleSave = () => {
+    onSaveDraft(persistScorecard())
   }
 
   const leafCounts = countLeaves(scored.criteria, attempts.yes)

@@ -1,6 +1,7 @@
 import { baseApi } from '@/shared/api/baseApi'
 import { groupCertificationRows } from '@/features/projects/lib/certificationCatalog'
 import { normalizeProject, normalizeProjectList } from '@/features/projects/lib/normalizeProject'
+import type { DraftApiPayload } from '@/features/projects/lib/mapProjectDraftApi'
 import type { Project, Certification } from '@/features/projects/types'
 
 type Paginated<T> = { items: T[]; total: number; page: number; pageSize: number }
@@ -9,12 +10,17 @@ export const projectsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     listProjects: build.query<
       Paginated<Project>,
-      { page?: number; pageSize?: number } | void
+      { page?: number; pageSize?: number; state?: string } | void
     >({
       query: (args) => {
-        const p = args?.page ?? 1
-        const ps = args?.pageSize ?? 10
-        return { url: `/projects?page=${p}&pageSize=${ps}` }
+        const page = args?.page ?? 1
+        const pageSize = args?.pageSize ?? 10
+        const params = new URLSearchParams({
+          limit: String(pageSize),
+          offset: String((page - 1) * pageSize),
+        })
+        if (args?.state) params.set('state', args.state)
+        return { url: `/projects?${params.toString()}` }
       },
       providesTags: (result) =>
         result
@@ -31,16 +37,20 @@ export const projectsApi = baseApi.injectEndpoints({
       transformResponse: (raw: unknown) =>
         normalizeProject(raw) ?? { id: '', name: '', certificationId: '' },
     }),
-    createProject: build.mutation<Project, Partial<Project>>({
+    createProject: build.mutation<Project, DraftApiPayload | Partial<Project>>({
       query: (body) => ({ url: '/projects', method: 'POST', body }),
       invalidatesTags: [{ type: 'Projects', id: 'LIST' }],
+      transformResponse: (raw: unknown) =>
+        normalizeProject(raw) ?? { id: '', name: '', certificationId: '' },
     }),
-    updateProject: build.mutation<Project, { id: string; changes: Partial<Project> }>({
-      query: ({ id, changes }) => ({ url: `/projects/${id}`, method: 'PUT', body: changes }),
+    updateProject: build.mutation<Project, { id: string; changes: DraftApiPayload | Partial<Project> }>({
+      query: ({ id, changes }) => ({ url: `/projects/${id}`, method: 'PATCH', body: changes }),
       invalidatesTags: (_res, _err, { id }) => [
         { type: 'Project', id },
         { type: 'Projects', id: 'LIST' },
       ],
+      transformResponse: (raw: unknown) =>
+        normalizeProject(raw) ?? { id: '', name: '', certificationId: '' },
     }),
     listCertifications: build.query<Certification[], void>({
       query: () => ({ url: '/projects/certifications' }),

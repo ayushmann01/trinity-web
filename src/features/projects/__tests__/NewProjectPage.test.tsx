@@ -16,9 +16,52 @@ vi.mock('sonner', () => ({
   },
 }))
 
+const createProjectMock = vi.hoisted(() => vi.fn())
+const updateProjectMock = vi.hoisted(() => vi.fn())
+const remoteProject = vi.hoisted(() => ({ current: undefined as Record<string, unknown> | undefined }))
+const remoteCriteria = vi.hoisted(() => ({
+  current: undefined as { attempted_ids?: number[]; maybe_ids?: number[] } | undefined,
+}))
+
 vi.mock('@/features/projects/api/projectsApi', () => ({
   useListCertificationsQuery: () => ({ data: undefined, isLoading: false, isError: true }),
   useGetCertificationQuery: () => ({ data: undefined, isLoading: false, isError: true }),
+  useCreateProjectMutation: () => [
+    (body: unknown) => {
+      createProjectMock(body)
+      return {
+        unwrap: () =>
+          Promise.resolve({
+            id: 'draft-1',
+            name: (body as { project_title?: string }).project_title ?? 'Harbor Campus',
+            state: 'DRAFT',
+            certificationId: '',
+          }),
+      }
+    },
+    { isLoading: false },
+  ],
+  useUpdateProjectMutation: () => [
+    (args: unknown) => {
+      updateProjectMock(args)
+      const { id, changes } = args as { id?: string; changes?: { state?: string } }
+      return {
+        unwrap: () =>
+          Promise.resolve({
+            id: id ?? 'draft-1',
+            name: 'Harbor Campus',
+            state: changes?.state ?? 'DRAFT',
+            certificationId: '',
+          }),
+      }
+    },
+    { isLoading: false },
+  ],
+  useGetProjectQuery: (_id: string, opts?: { skip?: boolean }) => ({
+    data: opts?.skip ? undefined : remoteProject.current,
+    isLoading: false,
+    isError: false,
+  }),
 }))
 
 const createStakeholderMock = vi.hoisted(() => vi.fn())
@@ -26,16 +69,29 @@ const createStakeholderMock = vi.hoisted(() => vi.fn())
 vi.mock('@/features/stakeholders/api/stakeholdersApi', () => ({
   useListStakeholderBucketsQuery: () => ({ data: undefined, isLoading: false, isError: false }),
   useListStakeholderRolesQuery: () => ({ data: undefined, isLoading: false, isError: false }),
+  useListStakeholdersQuery: () => ({ data: [], isLoading: false, isError: false }),
   useCreateStakeholderMutation: () => [
     createStakeholderMock.mockReturnValue({ unwrap: () => Promise.resolve({ id: 's1' }) }),
     { isLoading: false },
   ],
 }))
 
+const saveCriteriaMock = vi.hoisted(() => vi.fn())
+
 vi.mock('@/features/scorecard/api/scorecardApi', () => ({
   useGetCriteriaCatalogQuery: () => ({ data: { criteria: [] }, isLoading: false, isError: false }),
-  useGetProjectCriteriaQuery: () => ({ data: undefined, isLoading: false, isError: false }),
-  useSaveProjectCriteriaMutation: () => [vi.fn(), { isLoading: false }],
+  useGetProjectCriteriaQuery: (_args: unknown, opts?: { skip?: boolean }) => ({
+    data: opts?.skip ? undefined : remoteCriteria.current,
+    isLoading: false,
+    isError: false,
+  }),
+  useSaveProjectCriteriaMutation: () => [
+    (...args: unknown[]) => {
+      saveCriteriaMock(...args)
+      return { unwrap: () => Promise.resolve({ criteria: [] }) }
+    },
+    { isLoading: false },
+  ],
 }))
 
 async function completeStep1(user: ReturnType<typeof userEvent.setup>) {
@@ -51,6 +107,10 @@ async function completeStep1(user: ReturnType<typeof userEvent.setup>) {
 describe('NewProjectPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    remoteProject.current = undefined
+    remoteCriteria.current = undefined
+    createProjectMock.mockClear()
+    updateProjectMock.mockClear()
   })
 
   afterEach(() => {
@@ -193,29 +253,55 @@ describe('NewProjectPage', () => {
     expect(screen.getByLabelText(/^location/i)).toHaveValue('Mumbai')
   })
 
-  it('saves both wizard steps into redux so a remount restores values', async () => {
+  it('posts a DRAFT on first save and patches on the next save', async () => {
     const user = userEvent.setup()
-    const { store, unmount } = renderNewProjectPage()
+    const { store } = renderNewProjectPage()
     await completeStep1(user)
     await user.selectOptions(screen.getByLabelText(/certification \*/i), 'igbc')
     await user.click(screen.getByRole('button', { name: 'Save draft' }))
 
     await waitFor(() => {
-      expect(store.getState().projectDraft.certification.certificationId).toBe('igbc')
+      expect(createProjectMock).toHaveBeenCalled()
     })
-    expect(store.getState().projectDraft.profile.name).toBe('Harbor Campus')
-    expect(store.getState().projectDraft.currentStep).toBe(2)
+    expect(createProjectMock.mock.calls[0]?.[0]).toMatchObject({
+      state: 'DRAFT',
+      project_title: 'Harbor Campus',
+      draft_step: 2,
+      location: 'Mumbai',
+    })
+    expect(store.getState().projectDraft.project.id).toBe('draft-1')
+    expect(store.getState().projectDraft.certification.certificationId).toBe('igbc')
 
     const { toast } = await import('sonner')
     expect(toast.success).toHaveBeenCalledWith('Draft saved')
 
-    const saved = store.getState().projectDraft
-    unmount()
-    renderNewProjectPage({ preloadedState: { projectDraft: saved } })
+    await user.click(screen.getByRole('button', { name: 'Save draft' }))
+    await waitFor(() => {
+      expect(updateProjectMock).toHaveBeenCalled()
+    })
+    expect(updateProjectMock.mock.calls[0]?.[0]).toMatchObject({
+      id: 'draft-1',
+      changes: {
+        project_title: 'Harbor Campus',
+        draft_step: 2,
+      },
+    })
+  })
 
-    expect(screen.getByRole('heading', { name: 'Certification Details' })).toBeInTheDocument()
-    expect(screen.getByLabelText(/certification \*/i)).toHaveValue('igbc')
-    expect(screen.getByRole('button', { name: /continue to igbc scorecard/i })).toBeInTheDocument()
+  it('starts fresh on /projects/new even if redux still holds a leftover draft', async () => {
+    renderNewProjectPage({
+      route: '/projects/new',
+      fromWizard: false,
+      preloadedState: {
+        projectDraft: {
+          currentStep: 4,
+          profile: { ...emptyProjectProfile, name: 'Leftover Campus' },
+        },
+      },
+    })
+
+    expect(await screen.findByRole('heading', { name: 'Project Profile' })).toBeInTheDocument()
+    expect(screen.getByLabelText(/project title/i)).toHaveValue('')
   })
 
   it('opens the eligibility placeholder from the callout', async () => {
@@ -349,7 +435,7 @@ describe('NewProjectPage', () => {
 
   it('saves timeline values and continues to the review placeholder', async () => {
     const user = userEvent.setup()
-    const { store, unmount } = renderNewProjectPage({
+    const { store } = renderNewProjectPage({
       preloadedState: {
         projectDraft: {
           currentStep: 4,
@@ -366,17 +452,14 @@ describe('NewProjectPage', () => {
     await waitFor(() => {
       expect(store.getState().projectDraft.timeline.projectStart).toBe('2027-01-20')
     })
-
-    const saved = store.getState().projectDraft
-    unmount()
-    const remounted = renderNewProjectPage({ preloadedState: { projectDraft: saved } })
+    expect(createProjectMock).toHaveBeenCalled()
     expect(screen.getByRole('heading', { name: 'Project timeline' })).toBeInTheDocument()
     expect(screen.getByText('20 Jan 2027')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /next: review/i }))
     expect(await screen.findByTestId('review-step')).toBeInTheDocument()
-    expect(remounted.store.getState().projectDraft.currentStep).toBe(5)
-    expect(remounted.store.getState().projectDraft.project.startDate).toBe('2027-01-20')
+    expect(store.getState().projectDraft.currentStep).toBe(5)
+    expect(store.getState().projectDraft.project.startDate).toBe('2027-01-20')
   })
 
   it('returns to the scorecard from the timeline back button', async () => {
@@ -449,11 +532,6 @@ describe('NewProjectPage', () => {
       preloadedState: { projectDraft: { currentStep: 6 } },
     })
 
-    await user.click(screen.getByRole('button', { name: 'Save stakeholders' }))
-    const { toast } = await import('sonner')
-    expect(toast.success).toHaveBeenCalledWith('Stakeholders saved')
-    expect(createStakeholderMock).not.toHaveBeenCalled()
-
     await user.type(
       screen.getByTestId('stakeholder-email-architect-0'),
       'architect@example.com',
@@ -467,6 +545,7 @@ describe('NewProjectPage', () => {
         ),
       ).toBe(true)
     })
+    expect(createProjectMock).toHaveBeenCalled()
   })
 
   it('validates emails and can add or remove extra rows in a category', async () => {
@@ -485,12 +564,13 @@ describe('NewProjectPage', () => {
     expect(screen.queryByTestId('stakeholder-email-architect-1')).not.toBeInTheDocument()
   })
 
-  it('posts stakeholders when the draft already has a project id', async () => {
+  it('publishes from the final submit and posts stakeholders with numeric ids', async () => {
     const user = userEvent.setup()
     renderNewProjectPage({
       preloadedState: {
         projectDraft: {
           currentStep: 6,
+          profile: { ...emptyProjectProfile, name: 'Harbor Campus' },
           stakeholders: {
             people: [
               ...createEmptyProjectStakeholders().people.filter(
@@ -498,7 +578,7 @@ describe('NewProjectPage', () => {
               ),
               {
                 id: 'arch-1',
-                categoryId: 'architect',
+                categoryId: '8',
                 email: 'architect@example.com',
                 role: 'admin',
               },
@@ -511,16 +591,28 @@ describe('NewProjectPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Save stakeholders' }))
     await waitFor(() => {
+      expect(createProjectMock).not.toHaveBeenCalled()
       expect(createStakeholderMock).toHaveBeenCalledWith({
         projectId: 'proj-1',
         values: {
-          name: 'architect',
+          stakeholder_id: 8,
           email: 'architect@example.com',
-          bucketId: 'architect',
-          role: 'admin',
+          status: 'ADMIN',
         },
       })
     })
+    await waitFor(() => {
+      expect(updateProjectMock).toHaveBeenCalled()
+    })
+    const publishCall = updateProjectMock.mock.calls.find((call) => {
+      const args = call[0] as { changes?: { state?: string } }
+      return args?.changes?.state === 'CREATED'
+    })
+    expect(publishCall?.[0]).toMatchObject({
+      id: 'proj-1',
+      changes: { state: 'CREATED' },
+    })
+    expect(screen.getByText('Project detail')).toBeInTheDocument()
   })
 
   it('returns to the review step from the stakeholders back button', async () => {
@@ -530,5 +622,54 @@ describe('NewProjectPage', () => {
     })
     await user.click(screen.getByTestId('stakeholders-back'))
     expect(await screen.findByTestId('review-step')).toBeInTheDocument()
+  })
+
+  it('prompts to save when leaving with unsaved changes and stays on cancel', async () => {
+    const user = userEvent.setup()
+    renderNewProjectPage()
+    await user.type(screen.getByLabelText(/project title/i), 'Harbor Campus')
+    await user.click(screen.getByRole('button', { name: 'Exit' }))
+
+    expect(await screen.findByTestId('unsaved-draft-dialog')).toBeInTheDocument()
+    await user.click(screen.getByTestId('unsaved-cancel'))
+    expect(screen.queryByTestId('unsaved-draft-dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Project Profile' })).toBeInTheDocument()
+    expect(screen.getByLabelText(/project title/i)).toHaveValue('Harbor Campus')
+  })
+
+  it('discards unsaved changes and leaves the wizard', async () => {
+    const user = userEvent.setup()
+    renderNewProjectPage()
+    await user.type(screen.getByLabelText(/project title/i), 'Harbor Campus')
+    await user.click(screen.getByRole('button', { name: 'Exit' }))
+    await user.click(await screen.findByTestId('unsaved-discard'))
+    expect(await screen.findByText('Projects list')).toBeInTheDocument()
+  })
+
+  it('saves from the leave prompt then navigates away', async () => {
+    const user = userEvent.setup()
+    renderNewProjectPage()
+    await user.type(screen.getByLabelText(/project title/i), 'Harbor Campus')
+    await user.click(screen.getByRole('button', { name: 'Exit' }))
+    await user.click(await screen.findByTestId('unsaved-save-draft'))
+    await waitFor(() => {
+      expect(createProjectMock).toHaveBeenCalled()
+    })
+    expect(await screen.findByText('Projects list')).toBeInTheDocument()
+  })
+
+  it('resumes a backend draft at draft_step from the URL', async () => {
+    remoteProject.current = {
+      id: 'draft-99',
+      name: 'Resumed Towers',
+      state: 'DRAFT',
+      draftStep: 2,
+      location: 'Pune',
+      certificationId: 'griha',
+    }
+    renderNewProjectPage({ route: '/projects/new?draft=draft-99' })
+
+    expect(await screen.findByRole('heading', { name: 'Certification Details' })).toBeInTheDocument()
+    expect(screen.getByLabelText(/certification \*/i)).toHaveValue('griha')
   })
 })

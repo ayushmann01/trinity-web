@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  isDraftProject,
   normalizeProject,
   normalizeProjectList,
   projectCertificationLabel,
@@ -102,11 +103,66 @@ describe('normalizeProjectList', () => {
     expect(projectCertificationLabel(result.items[0]!)).toBe('GRIHA Version 2019')
   })
 
+  it('maps draft state, draft_step, timeline, and meta', () => {
+    const project = normalizeProject({
+      id: '11111111-1111-4111-8111-111111111111',
+      project_id: null,
+      project_title: 'Atrium Towers',
+      state: 'DRAFT',
+      draft_step: 3,
+      certification_id: 'C1',
+      version_id: 'C1_V1',
+      category_id: 'C1_V1_D1',
+      certification_data_id: 1,
+      target_id: '4',
+      site_area: 12000,
+      timeline: { start_date: '2027-01-15', certification_deadline: '2027-12-20' },
+      meta: { plot_area_unit: 'sq_m', floors_above_ground: 8, certification_stage: 'pre-certification' },
+    })
+
+    expect(project).toMatchObject({
+      id: '11111111-1111-4111-8111-111111111111',
+      name: 'Atrium Towers',
+      state: 'DRAFT',
+      draftStep: 3,
+      certificationId: 'C1',
+      certificationVersionId: 'C1_V1',
+      certificationCategoryId: 'C1_V1_D1',
+      certificationDataId: 1,
+      targetId: '4',
+      plotArea: 12000,
+      startDate: '2027-01-15',
+      certificationDeadline: '2027-12-20',
+      floorsAboveGround: 8,
+      certificationStage: 'pre-certification',
+    })
+  })
+
   it('accepts a bare array after envelope unwrap', () => {
     const result = normalizeProjectList([
       { id: 'x', name: 'Existing', certificationId: 'griha', targetPoints: 25 },
     ])
     expect(result.items[0]?.name).toBe('Existing')
     expect(projectTargetLabel(result.items[0]!)).toBe('25')
+  })
+
+  it('derives page from limit and offset', () => {
+    const result = normalizeProjectList({
+      items: [{ id: 'd1', project_title: 'Drafty', state: 'DRAFT' }],
+      total: 12,
+      limit: 10,
+      offset: 10,
+    })
+    expect(result.page).toBe(2)
+    expect(result.pageSize).toBe(10)
+    expect(result.items[0]?.state).toBe('DRAFT')
+  })
+})
+
+describe('isDraftProject', () => {
+  it('treats state DRAFT as a draft and CREATED as published', () => {
+    expect(isDraftProject({ state: 'DRAFT' })).toBe(true)
+    expect(isDraftProject({ state: 'CREATED' })).toBe(false)
+    expect(isDraftProject({})).toBe(false)
   })
 })

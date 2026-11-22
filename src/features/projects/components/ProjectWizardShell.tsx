@@ -9,6 +9,7 @@ type ProjectWizardShellProps = {
   onStepChange: (step: number) => void
   onSaveDraft: () => void
   onExit: () => void
+  savingDraft?: boolean
   contentClassName?: string
   fillHeight?: boolean
   children: ReactNode
@@ -19,6 +20,7 @@ export function ProjectWizardShell({
   onStepChange,
   onSaveDraft,
   onExit,
+  savingDraft = false,
   contentClassName,
   fillHeight = false,
   children,
@@ -40,9 +42,10 @@ export function ProjectWizardShell({
             size="sm"
             className="h-8 border-neutral-200 bg-white text-xs font-medium text-neutral-800 shadow-none hover:bg-neutral-50"
             onClick={onSaveDraft}
+            disabled={savingDraft}
             data-testid="save-draft"
           >
-            Save draft
+            {savingDraft ? 'Saving...' : 'Save draft'}
           </Button>
           <Button
             type="button"
