@@ -85,7 +85,10 @@ export function ProjectScorecardStep({
   const notes = stored.notes
   const [expandedNotes, setExpandedNotes] = useState<Set<number>>(new Set())
   const [collapsed, setCollapsed] = useState(false)
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [selectedByCatalog, setSelectedByCatalog] = useState<{ key: string; id: number | null }>({
+    key: '',
+    id: null,
+  })
 
   const displayName = scorecardCertificationName(
     certifications,
@@ -113,13 +116,10 @@ export function ProjectScorecardStep({
     [rows, projectTypology, attemptedIds, maybeIds, targetMin, apiPayload],
   )
 
-  const preferredId =
-    scored.criteria.find((item) => (item.title ?? '').toLowerCase().includes('passive design'))?.id ??
-    null
+  const rootKey = scored.criteria.map((item) => item.id).join(',')
+  const selectedId = selectedByCatalog.key === rootKey ? selectedByCatalog.id : null
   const selected =
-    scored.criteria.find((item) => item.id === (selectedId ?? preferredId)) ??
-    scored.criteria[0] ??
-    null
+    scored.criteria.find((item) => item.id === selectedId) ?? scored.criteria[0] ?? null
 
   const children = useMemo(() => childMap(rows), [rows])
   const attempts = useMemo(
@@ -188,8 +188,7 @@ export function ProjectScorecardStep({
     })
 
   const handleSelect = (id: number) => {
-    setSelectedId(id)
-    document.getElementById(`criterion-${id}`)?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+    setSelectedByCatalog({ key: rootKey, id })
   }
 
   const handleSave = async () => {
