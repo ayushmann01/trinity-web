@@ -120,38 +120,19 @@ export function criteriaLabel(row: Pick<CriteriaRecord, 'id' | 'criteria_id' | '
   return description.length > 80 ? `${description.slice(0, 77)}...` : description
 }
 
-function compareCriteria(left: CriteriaRecord, right: CriteriaRecord): number {
-  const leftParts = (left.criteria_id ?? '').split('.').filter(Boolean)
-  const rightParts = (right.criteria_id ?? '').split('.').filter(Boolean)
-  const length = Math.max(leftParts.length, rightParts.length)
-
-  for (let index = 0; index < length; index += 1) {
-    const leftPart = leftParts[index]
-    const rightPart = rightParts[index]
-    if (leftPart === undefined) return -1
-    if (rightPart === undefined) return 1
-    const leftNumber = Number(leftPart)
-    const rightNumber = Number(rightPart)
-    const bothNumeric = Number.isInteger(leftNumber) && Number.isInteger(rightNumber)
-    if (bothNumeric && leftNumber !== rightNumber) return leftNumber - rightNumber
-    if (leftPart !== rightPart) return leftPart < rightPart ? -1 : 1
-  }
-
+function compareByNumericId(left: Pick<CriteriaRecord, 'id'>, right: Pick<CriteriaRecord, 'id'>): number {
   return left.id - right.id
 }
 
 export function childMap(rows: CriteriaRecord[]): Map<number, CriteriaRecord[]> {
   const children = new Map<number, CriteriaRecord[]>()
-  const order = new Map(rows.map((row, index) => [row.id, index]))
   for (const row of rows) {
     if (row.parent_id === row.id) continue
     const list = children.get(row.parent_id) ?? []
     list.push(row)
     children.set(row.parent_id, list)
   }
-  for (const list of children.values()) {
-    list.sort((left, right) => (order.get(left.id) ?? 0) - (order.get(right.id) ?? 0) || compareCriteria(left, right))
-  }
+  for (const list of children.values()) list.sort(compareByNumericId)
   return children
 }
 
@@ -487,10 +468,9 @@ export function buildScorecard(input: {
   const { yesMap, maybeMap } = computePointsYesMaybe(applicable, yes, maybe)
   const stateCache = new Map<number, AttemptState>()
 
-  const rootIndex = new Map(applicable.map((row, index) => [row.id, index]))
   const roots = applicable
     .filter((row) => row.parent_id === row.id || !applicableIds.has(row.parent_id))
-    .sort((left, right) => (rootIndex.get(left.id) ?? 0) - (rootIndex.get(right.id) ?? 0))
+    .sort(compareByNumericId)
   const criteria = roots.map((row) => toNode(row, children, yes, maybe, yesMap, maybeMap, stateCache))
   const pointsAttempted = criteria.reduce((sum, criterion) => sum + criterion.points_attempted, 0)
   const pointsMaybe = criteria.reduce((sum, criterion) => sum + criterion.points_maybe, 0)
