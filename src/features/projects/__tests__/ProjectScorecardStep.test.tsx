@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderNewProjectPage } from '@/test/utils'
 import { emptyProjectProfile } from '@/features/projects/schemas/projectProfile'
@@ -7,6 +7,7 @@ import { emptyProjectCertification } from '@/features/projects/schemas/projectCe
 import { persistProjectDraft } from '@/features/projects/state/projectDraftSlice'
 import { emptyProjectTimeline } from '@/features/projects/schemas/projectTimeline'
 import { buildScorecard } from '@/features/scorecard/lib/criteriaTree'
+import { materializeCatalog } from '@/features/scorecard/lib/catalogFactory'
 import { GRIHA_DESIGN_RECORDS } from '@/features/scorecard/data/grihaDesignCatalog'
 import type { CriteriaNode, ProjectCriteriaResponse } from '@/features/scorecard/types'
 import type { CriteriaCatalogQueryArgs } from '@/features/scorecard/lib/mapCriteriaCatalog'
@@ -366,6 +367,83 @@ describe('ProjectScorecardStep', () => {
     expect(await screen.findByTestId('criterion-9100')).toBeInTheDocument()
     expect(screen.queryByTestId('criterion-6600')).not.toBeInTheDocument()
     expect(screen.getByTestId('selected-criterion-header')).toHaveTextContent('G1 GEMS Campus Planning')
+  })
+
+  it('sorts the left nav and selected subtree by numeric id, not lexicographic criteria_id', async () => {
+    const user = userEvent.setup()
+    const scored = buildScorecard({
+      rows: materializeCatalog([
+        {
+          id: 30,
+          criteria_id: 'P10',
+          title: 'Ten',
+          max_points: 2,
+          criteria_state: 'ROOT',
+          children: [
+            {
+              id: 32,
+              criteria_id: 'P10.2',
+              title: 'Ten-b',
+              max_points: 1,
+              criteria_state: 'NODE',
+              criteria_status: 'BINARY',
+            },
+            {
+              id: 31,
+              criteria_id: 'P10.1',
+              title: 'Ten-a',
+              max_points: 1,
+              criteria_state: 'NODE',
+              criteria_status: 'BINARY',
+            },
+          ],
+        },
+        {
+          id: 10,
+          criteria_id: 'P1',
+          title: 'One',
+          max_points: 1,
+          criteria_state: 'ROOT',
+        },
+        {
+          id: 20,
+          criteria_id: 'P2',
+          title: 'Two',
+          max_points: 1,
+          criteria_state: 'ROOT',
+        },
+      ]),
+      projectTypology: null,
+      attemptedYesIds: [],
+      maybeIds: [],
+      targetMinPts: 25,
+      targetMaxPts: 100,
+    })
+    const reversed = [...scored.criteria].reverse().map((root) => ({
+      ...root,
+      children: [...root.children].reverse(),
+    }))
+    queryState.catalog.payload = {
+      certification: { certification_title: 'GRIHA' },
+      criteria: reversed,
+    }
+
+    renderScorecard()
+
+    const navButtons = within(screen.getByTestId('scorecard-criteria-nav')).getAllByRole('button')
+    expect(navButtons.map((button) => button.getAttribute('data-testid'))).toEqual([
+      'criteria-nav-10',
+      'criteria-nav-20',
+      'criteria-nav-30',
+    ])
+    expect(screen.getByTestId('criterion-10')).toBeInTheDocument()
+
+    await user.click(screen.getByTestId('criteria-nav-30'))
+    expect(
+      within(screen.getByTestId('scorecard-tree'))
+        .getAllByTestId(/criterion-/)
+        .map((node) => node.getAttribute('data-testid')),
+    ).toEqual(['criterion-30', 'criterion-31', 'criterion-32'])
   })
 
   it('toggles YES and MAYBE on a BRANCH option and persists the draft', async () => {

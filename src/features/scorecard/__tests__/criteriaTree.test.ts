@@ -292,4 +292,54 @@ describe('criteriaTree scoring', () => {
     expect(node?.certification_stage).toBe('design')
     expect(node?.calculator_id).toEqual(['C-P09-01'])
   })
+
+  it('orders roots and children by numeric id, not lexicographic criteria_id', () => {
+    const rows = materializeCatalog([
+      {
+        id: 30,
+        criteria_id: 'P10',
+        title: 'Ten',
+        max_points: 2,
+        criteria_state: 'ROOT',
+        children: [
+          {
+            id: 32,
+            criteria_id: 'P10.2',
+            title: 'Ten-b',
+            max_points: 1,
+            criteria_state: 'NODE',
+            criteria_status: 'BINARY',
+          },
+          {
+            id: 31,
+            criteria_id: 'P10.1',
+            title: 'Ten-a',
+            max_points: 1,
+            criteria_state: 'NODE',
+            criteria_status: 'BINARY',
+          },
+        ],
+      },
+      {
+        id: 10,
+        criteria_id: 'P1',
+        title: 'One',
+        max_points: 1,
+        criteria_state: 'ROOT',
+      },
+      {
+        id: 20,
+        criteria_id: 'P2',
+        title: 'Two',
+        max_points: 1,
+        criteria_state: 'ROOT',
+      },
+    ])
+
+    const result = score(rows)
+    expect(result.criteria.map((node) => node.id)).toEqual([10, 20, 30])
+    expect(result.criteria.map((node) => node.criteria_id)).toEqual(['P1', 'P2', 'P10'])
+    expect(result.criteria[2]?.children.map((node) => node.id)).toEqual([31, 32])
+    expect(result.criteria[2]?.children.map((node) => node.criteria_id)).toEqual(['P10.1', 'P10.2'])
+  })
 })
