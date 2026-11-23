@@ -13,8 +13,9 @@ import { emptyProjectScorecard } from '@/features/projects/schemas/projectScorec
 import { mapWizardDraftToApi } from '@/features/projects/lib/mapProjectDraft'
 
 describe('projectDraftSlice', () => {
-  it('is persisted so drafts survive reload', () => {
-    expect(persistConfig.whitelist).toContain('projectDraft')
+  it('is not persisted so a new wizard starts fresh after reload', () => {
+    expect(persistConfig.whitelist).not.toContain('projectDraft')
+    expect(persistConfig.whitelist).toContain('auth')
   })
 
   it('stores form values and the current wizard step', () => {
@@ -93,6 +94,27 @@ describe('projectDraftSlice', () => {
     expect(store.getState().projectDraft.currentStep).toBe(6)
     expect(store.getState().projectDraft.stakeholders.people[0]?.email).toBe('lead@example.com')
     expect(store.getState().projectDraft.stakeholders.people[0]?.role).toBe('editor')
+  })
+
+  it('preserves backend id, code, and state when remapping the project', () => {
+    const store = setupStore()
+    store.dispatch(
+      persistProjectDraft({
+        project: { id: 'proj-1', code: 'CMN-1', state: 'DRAFT' },
+        profile: { ...emptyProjectProfile, name: 'Harbor Campus' },
+      }),
+    )
+    store.dispatch(
+      persistProjectDraft({
+        profile: { ...emptyProjectProfile, name: 'Harbor Campus West' },
+      }),
+    )
+    expect(store.getState().projectDraft.project).toMatchObject({
+      id: 'proj-1',
+      code: 'CMN-1',
+      state: 'DRAFT',
+      name: 'Harbor Campus West',
+    })
   })
 
   it('persists scorecard selections and notes in the wizard draft', () => {

@@ -44,11 +44,21 @@ vi.mock('@/features/projects/api/projectsApi', () => ({
     isError: false,
   }),
   useGetCertificationQuery: () => ({ data: undefined, isLoading: false, isError: false }),
+  useGetProjectQuery: () => ({ data: undefined, isLoading: false, isError: false }),
+  useCreateProjectMutation: () => [
+    vi.fn(() => ({ unwrap: () => Promise.resolve({ id: 'draft-1', name: '', certificationId: '' }) })),
+    { isLoading: false },
+  ],
+  useUpdateProjectMutation: () => [
+    vi.fn(() => ({ unwrap: () => Promise.resolve({ id: 'draft-1', name: '', certificationId: '' }) })),
+    { isLoading: false },
+  ],
 }))
 
 vi.mock('@/features/stakeholders/api/stakeholdersApi', () => ({
   useListStakeholderBucketsQuery: () => ({ data: undefined, isLoading: false, isError: false }),
   useListStakeholderRolesQuery: () => ({ data: undefined, isLoading: false, isError: false }),
+  useListStakeholdersQuery: () => ({ data: [], isLoading: false, isError: false }),
   useCreateStakeholderMutation: () => [vi.fn(), { isLoading: false }],
 }))
 

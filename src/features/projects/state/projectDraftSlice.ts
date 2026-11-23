@@ -48,11 +48,20 @@ const initialState: ProjectDraftState = {
 }
 
 function syncProject(state: ProjectDraftState) {
-  state.project = mapWizardDraftToApi(
-    state.profile,
-    state.certification,
-    state.timeline ?? emptyProjectTimeline,
-  )
+  const previous = state.project
+  state.project = {
+    ...mapWizardDraftToApi(
+      state.profile,
+      state.certification,
+      state.timeline ?? emptyProjectTimeline,
+    ),
+    id: previous.id,
+    code: previous.code,
+    state: previous.state,
+    draftStep: previous.draftStep,
+    certificationDataId: previous.certificationDataId,
+    targetId: previous.targetId,
+  }
 }
 
 export const projectDraftSlice = createSlice({
@@ -68,6 +77,7 @@ export const projectDraftSlice = createSlice({
         stakeholders?: ProjectStakeholdersFormValues
         scorecard?: ProjectScorecardDraft
         currentStep?: number
+        project?: Partial<Project>
       }>,
     ) {
       if (action.payload.profile) {
@@ -89,6 +99,9 @@ export const projectDraftSlice = createSlice({
         state.currentStep = action.payload.currentStep
       }
       syncProject(state)
+      if (action.payload.project) {
+        state.project = { ...state.project, ...action.payload.project }
+      }
     },
     setWizardStep(state, action: PayloadAction<number>) {
       state.currentStep = action.payload

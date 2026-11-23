@@ -14,7 +14,11 @@ export function EligibilityPlaceholderPage() {
         The eligibility questionnaire will be available in a later release. Your answers will pre-fill
         the scorecard.
       </p>
-      <Link to="/projects/new" className={cn(buttonVariants({ variant: 'outline' }), 'mt-6')}>
+      <Link
+        to="/projects/new"
+        state={{ fromWizard: true }}
+        className={cn(buttonVariants({ variant: 'outline' }), 'mt-6')}
+      >
         Back to project set-up
       </Link>
     </div>

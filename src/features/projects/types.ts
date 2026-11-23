@@ -1,5 +1,7 @@
 import type { AreaUnit } from '@/features/projects/constants'
 
+export type { AreaUnit }
+
 export type CatalogOption = {
   id: string
   name: string
@@ -38,9 +40,16 @@ export type ProjectMilestone = {
   date: string
 }
 
+export type ProjectState = 'DRAFT' | 'CREATED'
+
 export type Project = {
   id: string
   name: string
+  code?: string
+  state?: string
+  draftStep?: number
+  certificationDataId?: number
+  targetId?: string
   certificationId: string
   certificationTitle?: string
   typologyId?: string
