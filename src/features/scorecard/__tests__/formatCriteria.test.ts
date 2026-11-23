@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { chipCode, displayCode } from '@/features/scorecard/lib/formatCriteria'
+import {
+  chipCode,
+  displayCode,
+  hasCalculatorData,
+  hasCriterionReferences,
+} from '@/features/scorecard/lib/formatCriteria'
 
 describe('displayCode / chipCode', () => {
   it('uses the raw criteria_id from the API, without inventing P1 / P- prefixes', () => {
@@ -17,5 +22,31 @@ describe('displayCode / chipCode', () => {
     expect(displayCode(null, 0)).toBe('')
     expect(displayCode('  ', 0)).toBe('')
     expect(chipCode(undefined)).toBe('')
+  })
+})
+
+describe('hasCalculatorData', () => {
+  it('treats null, empty, and blank calculator_id entries as unavailable', () => {
+    expect(hasCalculatorData({ calculator_id: null })).toBe(false)
+    expect(hasCalculatorData({ calculator_id: undefined })).toBe(false)
+    expect(hasCalculatorData({ calculator_id: [] })).toBe(false)
+    expect(hasCalculatorData({ calculator_id: ['', '  '] })).toBe(false)
+  })
+
+  it('accepts calculator_id or calculator_ids with a real id', () => {
+    expect(hasCalculatorData({ calculator_id: ['C-P09-01'] })).toBe(true)
+    expect(hasCalculatorData({ calculator_id: null, calculator_ids: ['C-G01-01'] })).toBe(true)
+  })
+})
+
+describe('hasCriterionReferences', () => {
+  it('treats null, empty string, and empty arrays as none', () => {
+    expect(hasCriterionReferences({ references: null })).toBe(false)
+    expect(hasCriterionReferences({ references: '' })).toBe(false)
+    expect(hasCriterionReferences({ references: '   ' })).toBe(false)
+  })
+
+  it('is true for a URL or other non-empty references text', () => {
+    expect(hasCriterionReferences({ references: 'https://www.grihaindia.org' })).toBe(true)
   })
 })

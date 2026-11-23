@@ -305,9 +305,20 @@ describe('ProjectScorecardStep', () => {
     renderScorecard()
 
     expect(screen.getByTestId('selected-criterion-header')).toHaveTextContent(
-      '2 Fire and Life Safety in Sustainable Buildings',
+      'Fire and Life Safety in Sustainable Buildings',
     )
+    expect(screen.getByTestId('selected-criterion-header')).toHaveTextContent('2')
     expect(screen.getByTestId('criterion-6200')).toBeInTheDocument()
+    expect(
+      within(screen.getByTestId('scorecard-tree')).queryByRole('heading', {
+        name: 'Fire and Life Safety in Sustainable Buildings',
+      }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByTestId('calculator-6200')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('references-6200')).not.toBeInTheDocument()
+    expect(screen.getByTestId('references-6201')).toBeInTheDocument()
+    expect(screen.queryByTestId('calculator-6201')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('references-6202')).not.toBeInTheDocument()
     expect(screen.queryByTestId('criterion-6600')).not.toBeInTheDocument()
     expect(screen.queryByText(/Energy meters/)).not.toBeInTheDocument()
     expect(screen.getByTestId('criteria-nav-6300')).toBeInTheDocument()
@@ -315,8 +326,9 @@ describe('ProjectScorecardStep', () => {
 
     await user.click(screen.getByTestId('criteria-nav-6600'))
     expect(screen.getByTestId('selected-criterion-header')).toHaveTextContent(
-      '5 Propagating Passive Design Strategies',
+      'Propagating Passive Design Strategies',
     )
+    expect(screen.getByTestId('selected-criterion-header')).toHaveTextContent('5')
     expect(screen.getByTestId('criterion-6600')).toBeInTheDocument()
     expect(screen.getByTestId('criterion-6600')).not.toHaveClass('border')
     expect(screen.queryByTestId('criterion-6200')).not.toBeInTheDocument()
@@ -395,7 +407,8 @@ describe('ProjectScorecardStep', () => {
 
     expect(await screen.findByTestId('criterion-9100')).toBeInTheDocument()
     expect(screen.queryByTestId('criterion-6600')).not.toBeInTheDocument()
-    expect(screen.getByTestId('selected-criterion-header')).toHaveTextContent('G1 GEMS Campus Planning')
+    expect(screen.getByTestId('selected-criterion-header')).toHaveTextContent('GEMS Campus Planning')
+    expect(screen.getByTestId('selected-criterion-header')).toHaveTextContent('G1')
   })
 
   it('sorts the left nav and selected subtree by numeric id, not lexicographic criteria_id', async () => {
@@ -530,8 +543,9 @@ describe('ProjectScorecardStep', () => {
     renderScorecard()
     await user.click(screen.getByTestId('criteria-nav-6600'))
     expect(screen.getByTestId('selected-criterion-header')).toHaveTextContent(
-      '5 Propagating Passive Design Strategies',
+      'Propagating Passive Design Strategies',
     )
+    expect(screen.getByTestId('selected-criterion-header')).toHaveTextContent('5')
     expect(screen.getByTestId('selected-criterion-header')).not.toHaveTextContent('P5')
   })
 })

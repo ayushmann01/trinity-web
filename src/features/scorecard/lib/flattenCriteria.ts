@@ -8,6 +8,9 @@ type NestedCriteria = Partial<CriteriaNode> & {
   children?: NestedCriteria[] | null
   attempted?: boolean
   attempt_state?: string
+  calculator_ids?: unknown
+  calculator?: unknown
+  criteria_data?: unknown
 }
 
 function asNumber(value: unknown, fallback = 0): number {
@@ -34,9 +37,53 @@ function asRules(value: unknown): Record<string, number> | null {
   return Object.keys(parsed).length > 0 ? parsed : null
 }
 
-function asCalculatorId(value: unknown): string[] | null {
-  if (!Array.isArray(value)) return null
-  return value.filter((item): item is string => typeof item === 'string')
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function collectStrings(value: unknown): string[] {
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed ? [trimmed] : []
+  }
+  if (Array.isArray(value)) return value.flatMap(collectStrings)
+  return []
+}
+
+/** `criteria_data.calculator_id` is a text array; empty / blank entries mean none. */
+export function normalizeCalculatorIds(value: unknown): string[] | null {
+  const ids = collectStrings(value)
+  return ids.length > 0 ? ids : null
+}
+
+function firstCalculatorIds(...values: unknown[]): string[] | null {
+  for (const value of values) {
+    const ids = normalizeCalculatorIds(value)
+    if (ids) return ids
+  }
+  return null
+}
+
+function calculatorIdsFromNode(node: NestedCriteria): string[] | null {
+  const calculator = isRecord(node.calculator) ? node.calculator : null
+  const criteriaData = isRecord(node.criteria_data) ? node.criteria_data : null
+  return firstCalculatorIds(
+    node.calculator_id,
+    node.calculator_ids,
+    calculator?.id,
+    calculator?.ids,
+    calculator?.calculator_id,
+    criteriaData?.calculator_id,
+    criteriaData?.calculator_ids,
+  )
+}
+
+function asReferences(value: unknown): string | null {
+  if (Array.isArray(value)) {
+    const parts = collectStrings(value)
+    return parts.length > 0 ? parts.join('\n') : null
+  }
+  return asNullableString(value)
 }
 
 export function recordFromNode(node: NestedCriteria, fallbackParentId?: number): CriteriaRecord {
@@ -53,7 +100,7 @@ export function recordFromNode(node: NestedCriteria, fallbackParentId?: number):
     pr_stakeholder_id: node.pr_stakeholder_id ?? null,
     sc_stakeholder_id: node.sc_stakeholder_id ?? null,
     tr_stakeholder_id: node.tr_stakeholder_id ?? null,
-    references: asNullableString(node.references),
+    references: asReferences(node.references),
     criteria_category: asNullableString(node.criteria_category) ?? 'CRITERIA',
     section: asNullableString(node.section),
     typology: asNullableString(node.typology),
@@ -61,7 +108,7 @@ export function recordFromNode(node: NestedCriteria, fallbackParentId?: number):
     footnotes: asNullableString(node.footnotes),
     rules: asRules(node.rules),
     certification_stage: asNullableString(node.certification_stage),
-    calculator_id: asCalculatorId(node.calculator_id),
+    calculator_id: calculatorIdsFromNode(node),
   }
 }
 
