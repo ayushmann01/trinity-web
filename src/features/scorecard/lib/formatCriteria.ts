@@ -34,6 +34,37 @@ export function calculatorCopy(node: CriteriaNode): string | null {
   return parts.join(' & ')
 }
 
+function collectNonEmptyStrings(value: unknown): string[] {
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed ? [trimmed] : []
+  }
+  if (Array.isArray(value)) return value.flatMap(collectNonEmptyStrings)
+  return []
+}
+
+export function calculatorIdsOf(
+  node: Pick<CriteriaNode, 'calculator_id'> & { calculator_ids?: unknown },
+): string[] {
+  return [...new Set([...collectNonEmptyStrings(node.calculator_id), ...collectNonEmptyStrings(node.calculator_ids)])]
+}
+
+/** True when criteria_data.calculator_id (or calculator_ids) has at least one non-empty id. */
+export function hasCalculatorData(
+  node: Pick<CriteriaNode, 'calculator_id'> & { calculator_ids?: unknown },
+): boolean {
+  return calculatorIdsOf(node).length > 0
+}
+
+export function referenceItems(value: string | null | undefined): string[] {
+  return collectNonEmptyStrings(value?.split(/\n+/))
+}
+
+/** True when the API `references` field has a URL or non-empty text — not null / "" / []. */
+export function hasCriterionReferences(node: Pick<CriteriaNode, 'references'>): boolean {
+  return referenceItems(node.references).length > 0
+}
+
 export function checklistInstruction(_node: CriteriaNode): string {
   void _node
   return 'select the criteria with highest benchmark and ? for stretch goal'

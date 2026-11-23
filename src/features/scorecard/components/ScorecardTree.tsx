@@ -4,12 +4,16 @@ import { AttemptToggle, ScoreBoxes } from '@/features/scorecard/components/Attem
 import {
   aimText,
   calculatorCopy,
+  calculatorIdsOf,
   checklistInstruction,
   chipCode,
   displayCode,
   displayTitle,
+  hasCalculatorData,
+  hasCriterionReferences,
   isChecklistParent,
   pointsLabel,
+  referenceItems,
 } from '@/features/scorecard/lib/formatCriteria'
 import { cn } from '@/shared/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
@@ -63,7 +67,16 @@ function CriterionSection({
       data-testid={`criterion-${node.id}`}
       className={cn(inactive && 'opacity-60')}
     >
-      <CriterionHeader node={node} depth={depth} leafToggle={leafToggle} inactive={inactive} onToggle={props.onToggle} />
+      {leafToggle ? (
+        <CriterionHeader
+          node={node}
+          depth={depth}
+          leafToggle={leafToggle}
+          inactive={inactive}
+          onToggle={props.onToggle}
+          hideTitle
+        />
+      ) : null}
       <ActionRow
         node={node}
         note={props.notes[String(node.id)] ?? ''}
@@ -130,16 +143,20 @@ function CriterionHeader({
   leafToggle,
   inactive,
   onToggle,
+  hideTitle = false,
 }: {
   node: CriteriaNode
   depth: number
   leafToggle: boolean
   inactive: boolean
   onToggle: (id: number, clicked: 'YES' | 'MAYBE') => void
+  hideTitle?: boolean
 }) {
   return (
     <header className="flex items-start gap-2.5 py-2">
-      <CodeBadge code={chipCode(node.criteria_id) || displayCode(node.criteria_id, depth)} />
+      {hideTitle ? null : (
+        <CodeBadge code={chipCode(node.criteria_id) || displayCode(node.criteria_id, depth)} />
+      )}
       {leafToggle ? (
         <AttemptToggle
           state={node.attempt_state}
@@ -148,18 +165,22 @@ function CriterionHeader({
           onChange={(clicked) => onToggle(node.id, clicked)}
         />
       ) : null}
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <h3 className="text-[13px] font-medium leading-5 text-neutral-900">{displayTitle(node)}</h3>
-          {node.mandatory ? <MandatoryPill /> : null}
+      {hideTitle ? null : (
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-[13px] font-medium leading-5 text-neutral-900">{displayTitle(node)}</h3>
+            {node.mandatory ? <MandatoryPill /> : null}
+          </div>
+          {node.description ? (
+            <p className="mt-1 whitespace-pre-line text-[12px] leading-5 text-neutral-500">
+              {node.description}
+            </p>
+          ) : null}
         </div>
-        {node.description ? (
-          <p className="mt-1 whitespace-pre-line text-[12px] leading-5 text-neutral-500">
-            {node.description}
-          </p>
-        ) : null}
-      </div>
-      <ScoreBoxes maybe={node.points_maybe} yes={node.points_attempted} max={node.max_points} />
+      )}
+      {hideTitle ? null : (
+        <ScoreBoxes maybe={node.points_maybe} yes={node.points_attempted} max={node.max_points} />
+      )}
     </header>
   )
 }
@@ -221,41 +242,41 @@ function ActionRow({
   onNoteChange: (value: string) => void
   onToggleNote: () => void
 }) {
-  const calc = calculatorCopy(node)
-  const hasRefs = Boolean(node.references || node.footnotes)
+  const calcIds = calculatorIdsOf(node)
+  const calcCopy = calculatorCopy(node)
+  const hasCalculator = hasCalculatorData(node)
+  const refs = referenceItems(node.references)
+  const hasRefs = hasCriterionReferences(node)
 
   return (
     <div className="pb-2">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-4">
-          <Popover>
-            <PopoverTrigger asChild>
-              <ActionLink testId={`references-${node.id}`}>
-                <Paperclip className="h-3 w-3" />
-                References
-              </ActionLink>
-            </PopoverTrigger>
-            <PopoverContent className="w-72 p-3 text-[12px] text-neutral-700">
-              {hasRefs ? (
-                <>
-                  {node.references ? (
-                    <a
-                      href={node.references}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="break-all text-blue-700 underline"
-                    >
-                      {node.references}
-                    </a>
-                  ) : null}
-                  {node.footnotes ? <p className="mt-2 whitespace-pre-line">{node.footnotes}</p> : null}
-                </>
-              ) : (
-                <p>No references for this criterion.</p>
-              )}
-            </PopoverContent>
-          </Popover>
-          {calc ? (
+          {hasRefs ? (
+            <Popover>
+              <PopoverTrigger asChild>
+                <ActionLink testId={`references-${node.id}`}>
+                  <Paperclip className="h-3 w-3" />
+                  References
+                </ActionLink>
+              </PopoverTrigger>
+              <PopoverContent className="w-72 p-3 text-[12px] text-neutral-700">
+                {refs.map((href) => (
+                  <a
+                    key={href}
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block break-all text-blue-700 underline"
+                  >
+                    {href}
+                  </a>
+                ))}
+                {node.footnotes ? <p className="mt-2 whitespace-pre-line">{node.footnotes}</p> : null}
+              </PopoverContent>
+            </Popover>
+          ) : null}
+          {hasCalculator ? (
             <Popover>
               <PopoverTrigger asChild>
                 <ActionLink testId={`calculator-${node.id}`}>
@@ -263,14 +284,11 @@ function ActionRow({
                   Calculator
                 </ActionLink>
               </PopoverTrigger>
-              <PopoverContent className="w-72 p-3 text-[12px] text-neutral-700">{calc}</PopoverContent>
+              <PopoverContent className="w-72 p-3 text-[12px] text-neutral-700">
+                {calcCopy ?? calcIds.join(', ')}
+              </PopoverContent>
             </Popover>
-          ) : (
-            <ActionLink testId={`calculator-${node.id}`} disabled>
-              <Calculator className="h-3 w-3" />
-              Calculator
-            </ActionLink>
-          )}
+          ) : null}
         </div>
         <ActionLink testId={`notes-toggle-${node.id}`} onClick={onToggleNote}>
           {noteOpen ? 'Hide note' : 'Show notes'}
@@ -359,15 +377,20 @@ function TreeNode({ children }: { children: ReactNode }) {
 }
 
 export function SelectedCriterionHeader({ node }: { node: CriteriaNode }) {
+  const code = chipCode(node.criteria_id) || displayCode(node.criteria_id, 0)
   return (
     <div
       className="mb-1 flex items-start justify-between gap-4 pb-4"
       data-testid="selected-criterion-header"
     >
       <div>
-        <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
-          {displayCode(node.criteria_id, 0)} {displayTitle(node)}
-        </h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <CodeBadge code={code} />
+          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
+            {displayTitle(node)}
+          </h2>
+          {node.mandatory ? <MandatoryPill /> : null}
+        </div>
         <p className="mt-1 text-[12px] leading-5 text-neutral-500">{aimText(node)}</p>
       </div>
       <div className="flex items-center gap-1.5">
